@@ -54,6 +54,11 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	db.AutoMigrate(
+		&repository.Event{},
+		&repository.Restriction{},
+		&repository.User{},
+	)
 	repository := repository.NewRepository(logger, db)
 	groupwareCrawler := groupware.NewCrawler()
 	slackService := slack.NewService()

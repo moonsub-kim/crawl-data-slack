@@ -7,8 +7,8 @@ type Restriction struct {
 	Job       string `gorm:"uniqueIndex:crawler_job_created"`
 	StartDate time.Time
 	EndDate   time.Time
-	HourFrom  time.Time
-	HourTo    time.Time
+	HourFrom  int
+	HourTo    int
 	CreatedAt time.Time `gorm:"autoCreateTime;uniqueIndex:crawler_job_created"`
 }
 

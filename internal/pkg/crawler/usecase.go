@@ -16,8 +16,6 @@ type UseCase struct {
 
 // TODO rename
 func (u UseCase) Work(crawler string, job string) error {
-	now := time.Now()
-
 	restricted, err := u.isRestricted(crawler, job)
 	if err != nil {
 		return err
@@ -31,7 +29,7 @@ func (u UseCase) Work(crawler string, job string) error {
 		return err
 	}
 
-	notifiedEvents, err := u.repository.GetEvents(now.AddDate(0, 0, -1))
+	notifiedEvents, err := u.repository.GetEvents(time.Now().AddDate(0, 0, -1))
 	if err != nil {
 		return err
 	}
@@ -46,12 +44,17 @@ func (u UseCase) Work(crawler string, job string) error {
 }
 
 func (u UseCase) isRestricted(crawler string, job string) (bool, error) {
-	restriction, err := u.repository.GetRestriction(crawler, job)
+	r, err := u.repository.GetRestriction(crawler, job)
 	if err != nil {
 		return false, err
 	}
 
-	return restriction.Crawler != "", nil
+	now := time.Now()
+	if now.After(r.StartDate) && now.Before(r.EndDate) && r.HourFrom <= now.Hour() && now.Hour() < r.HourTo {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (u UseCase) filterEvents(crawledEvents []Event, notifiedEvents []Event) []Event {

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"time"
 
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
@@ -31,9 +32,11 @@ func (r Repository) SaveEvents(events []crawler.Event) error {
 
 func (r Repository) GetRestriction(c string, j string) (crawler.Restriction, error) {
 	var restriction Restriction
-	err := r.db.Where("crawler = ? AND job = ?", c, j).Order("created_at DESC").First(&restriction)
-	if err != nil {
+	err := r.db.Where("crawler = ? AND job = ?", c, j).Order("created_at DESC").First(&restriction).Error
+	if errors.As(err, &gorm.ErrRecordNotFound) {
 		return crawler.Restriction{}, nil
+	} else if err != nil {
+		return crawler.Restriction{}, err
 	}
 
 	return r.mapper.mapModelRestrictionToRestriction(restriction), nil

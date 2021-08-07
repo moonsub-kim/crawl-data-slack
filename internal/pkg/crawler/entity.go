@@ -21,8 +21,8 @@ type Restriction struct {
 	Job       string
 	StartDate time.Time
 	EndDate   time.Time
-	HourFrom  time.Time
-	HourTo    time.Time
+	HourFrom  int
+	HourTo    int
 }
 
 type Notification struct {
