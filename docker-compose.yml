@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    container_name: slack_mention
+    container_name: crawl-data-slack
     build:
       context: .
       target: build
