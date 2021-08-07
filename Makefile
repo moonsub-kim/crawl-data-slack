@@ -9,4 +9,4 @@ init:
 
 cmd=
 up:
-	@COMMAND=${cmd} docker-compose up --build
+	@COMMAND=${cmd} docker-compose up --build app

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler/repository"
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/groupware"
@@ -19,7 +21,7 @@ var Commands = []*cli.Command{
 			{
 				Name: "groupware",
 				Flags: []cli.Flag{
-					&cli.BoolFlag{Name: "declined_payments"},
+					&cli.BoolFlag{Name: "job"},
 				},
 				Action: CrawlGroupWareDeclinedPayments,
 			},
@@ -44,27 +46,37 @@ var Commands = []*cli.Command{
 
 // CrawlGroupWareDeclinedPayments crawls declied payments from groupware and notify the events
 func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
+	// groupWareID := os.Getenv("GROUPWARE_ID")
+	// groupWarePW := os.Getenv("GROUPWARE_PW")
+	// slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
+	mysqlConn := os.Getenv("MYSQL_CONN")
+
 	zapLogger, err := zap.NewDevelopment()
 	if err != nil {
 		return err
 	}
-	logger := zaplogger.NewZapLoggerWrapper(zapLogger)
+	log := zaplogger.NewZapLoggerWrapper(zapLogger)
 
-	db, err := gorm.Open(mysql.Open(""), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
 	if err != nil {
 		return err
 	}
-	db.AutoMigrate(
+
+	err = db.AutoMigrate(
 		&repository.Event{},
 		&repository.Restriction{},
 		&repository.User{},
 	)
-	repository := repository.NewRepository(logger, db)
+	if err != nil {
+		return err
+	}
+
+	repository := repository.NewRepository(log, db)
 	groupwareCrawler := groupware.NewCrawler()
 	slackService := slack.NewService()
 
 	usecase := crawler.NewUseCase(
-		logger,
+		log,
 		repository,
 		groupwareCrawler,
 		slackService,

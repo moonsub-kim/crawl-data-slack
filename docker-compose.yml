@@ -6,24 +6,27 @@ services:
     build:
       context: .
       target: build
-    command: /go/bin/crawl-data-slack ${COMMAND}
+    command: bash -c "sleep 1 && echo ${COMMAND} && /go/bin/crawl-data-slack ${COMMAND}"
     environment:
       - GROUPWARE_ID=${GROUPWARE_ID}
       - GROUPWARE_PW=${GROUPWARE_PW}
       - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
-      - MYSQL_CONN=crawler:crawler@tcp(db:3306)/crawler?parseTime=true&charset=utf8
-
+      - MYSQL_CONN=root@tcp(db:3306)/crawler?parseTime=true&charset=utf8
     volumes:
       - ./driver:/app/driver/
-   depends_on:
+    depends_on:
      - db
 
   db:
-   image: mysql:8.0
-   restart: always
-   environment:
-     - MYSQL_ROOT_PASSWORD=crawler
+    image: mysql:8.0
+    restart: always
+    ports: 
+      - 3306:3306
+    environment:
      - MYSQL_DATABASE=crawler
-     - MYSQL_USER=crawler
-     - MYSQL_PASSWORD=crawler
      - MYSQL_ALLOW_EMPTY_PASSWORD=1
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

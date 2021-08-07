@@ -3,8 +3,8 @@ package repository
 import "time"
 
 type Restriction struct {
-	Crawler   string `gorm:"uniqueIndex:crawler_job_created"`
-	Job       string `gorm:"uniqueIndex:crawler_job_created"`
+	Crawler   string `gorm:"type:varchar(128);uniqueIndex:crawler_job_created"`
+	Job       string `gorm:"type:varchar(128);uniqueIndex:crawler_job_created"`
 	StartDate time.Time
 	EndDate   time.Time
 	HourFrom  int
@@ -17,10 +17,10 @@ func (Restriction) TableName() string {
 }
 
 type Event struct {
-	Crawler   string    `gorm:"uniqueIndex:crawler_job_id"`
-	Job       string    `gorm:"uniqueIndex:crawler_job_id"`
-	UserName  string    `gorm:"uniqueIndex:crawler_job_id"`
-	ID        string    `gorm:"uniqueIndex:crawler_job_id"`
+	Crawler   string    `gorm:"type:varchar(128);uniqueIndex:crawler_job_id"`
+	Job       string    `gorm:"type:varchar(128);uniqueIndex:crawler_job_id"`
+	UserName  string    `gorm:"type:varchar(128);uniqueIndex:crawler_job_id"`
+	ID        string    `gorm:"type:varchar(128);uniqueIndex:crawler_job_id"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 }
 
@@ -29,8 +29,8 @@ func (Event) TableName() string {
 }
 
 type User struct {
-	ID   string `gorm:"primary_key"`
-	Name string `gorm:"index"`
+	ID   string `gorm:"type:varchar(128);primary_key"`
+	Name string `gorm:"type:varchar(128);index"`
 }
 
 func (User) TableName() string {
