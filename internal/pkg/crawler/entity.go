@@ -24,3 +24,8 @@ type Restriction struct {
 	HourFrom  time.Time
 	HourTo    time.Time
 }
+
+type Notification struct {
+	Event Event
+	User  User
+}

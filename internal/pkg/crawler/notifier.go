@@ -1,5 +1,5 @@
 package crawler
 
 type Notifier interface {
-	Notify(e Event) error
+	Notify(e Notification) error
 }

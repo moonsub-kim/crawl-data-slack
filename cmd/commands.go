@@ -1,7 +1,15 @@
 package main
 
 import (
+	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
+	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler/repository"
+	"github.com/Buzzvil/crawl-data-slack/internal/pkg/groupware"
+	"github.com/Buzzvil/crawl-data-slack/internal/pkg/slack"
+	"github.com/Buzzvil/crawl-data-slack/internal/pkg/zaplogger"
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 var Commands = []*cli.Command{
@@ -36,17 +44,33 @@ var Commands = []*cli.Command{
 
 // CrawlGroupWareDeclinedPayments crawls declied payments from groupware and notify the events
 func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
+	zapLogger, err := zap.NewDevelopment()
+	if err != nil {
+		return err
+	}
+	logger := zaplogger.NewZapLoggerWrapper(zapLogger)
+
+	db, err := gorm.Open(mysql.Open(""), &gorm.Config{})
+	if err != nil {
+		return err
+	}
+	repository := repository.NewRepository(logger, db)
+	groupwareCrawler := groupware.NewCrawler()
+	slackService := slack.NewService()
+
+	usecase := crawler.NewUseCase(
+		logger,
+		repository,
+		groupwareCrawler,
+		slackService,
+		slackService,
+	)
+
+	usecase.Work("groupware", "declined_payments")
 	return nil
 }
 
 // AddRestriction adds a restriction
 func AddRestriction(ctx *cli.Context) error {
-	// logger, err := zap.NewDevelopment()
-	// if err != nil {
-	// 	return err
-	// }
-	// var usecase Usecase = crawler.NewUseCase(
-	// 	logger,
-	// )
 	return nil
 }

@@ -3,7 +3,7 @@ init:
 	@echo "\
 	GROUPWARE_ID=\n\
 	GROUPWARE_PW=\n\
-	SLACK_API_KEY=\n\
+	SLACK_BOT_TOKEN=\n\
 	" >> .env
 	@mkdir -p driver
 

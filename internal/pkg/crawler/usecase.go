@@ -7,17 +7,18 @@ import (
 )
 
 type UseCase struct {
-	repository Repository
-	crawler    Crawler
-	notifier   Notifier
-	logger     logger.Logger
+	logger      logger.Logger
+	repository  Repository
+	crawler     Crawler
+	notifier    Notifier
+	userService UserService
 }
 
 // TODO rename
-func (u UseCase) Work() error {
+func (u UseCase) Work(crawler string, job string) error {
 	now := time.Now()
 
-	restricted, err := u.isRestricted(now)
+	restricted, err := u.isRestricted(crawler, job)
 	if err != nil {
 		return err
 	} else if restricted {
@@ -44,8 +45,8 @@ func (u UseCase) Work() error {
 	return u.notify(newEvents)
 }
 
-func (u UseCase) isRestricted(t time.Time) (bool, error) {
-	restriction, err := u.repository.GetRestriction(t)
+func (u UseCase) isRestricted(crawler string, job string) (bool, error) {
+	restriction, err := u.repository.GetRestriction(crawler, job)
 	if err != nil {
 		return false, err
 	}
@@ -77,7 +78,17 @@ func (u UseCase) filterEvents(crawledEvents []Event, notifiedEvents []Event) []E
 
 func (u UseCase) notify(events []Event) error {
 	for i, e := range events {
-		err := u.notifier.Notify(e)
+		user, err := u.getUser(e.UserName)
+		if err != nil {
+			return err
+		}
+
+		n := Notification{
+			Event: e,
+			User:  user,
+		}
+
+		err = u.notifier.Notify(n)
 		if err != nil {
 			u.logger.Error(
 				"error on notify",
@@ -93,6 +104,10 @@ func (u UseCase) notify(events []Event) error {
 	return nil
 }
 
+func (u UseCase) getUser(userName string) (User, error) {
+	return User{}, nil
+}
+
 func (u UseCase) AddRestriction(restriction Restriction) error {
 	return u.repository.SaveRestriction(restriction)
 }
@@ -102,11 +117,13 @@ func NewUseCase(
 	repository Repository,
 	crawler Crawler,
 	notifier Notifier,
+	userService UserService,
 ) *UseCase {
 	return &UseCase{
-		logger:     logger,
-		repository: repository,
-		crawler:    crawler,
-		notifier:   notifier,
+		logger:      logger,
+		repository:  repository,
+		crawler:     crawler,
+		notifier:    notifier,
+		userService: userService,
 	}
 }

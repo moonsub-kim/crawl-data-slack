@@ -1,8 +1,6 @@
 package zaplogger
 
 import (
-	"context"
-
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -13,19 +11,19 @@ type Wrapper struct {
 }
 
 // Info logs info-level log
-func (w *Wrapper) Info(ctx context.Context, msg string, fields ...logger.Field) {
+func (w *Wrapper) Info(msg string, fields ...logger.Field) {
 	zapFields := w.transformToZapFields(fields...)
 	w.logger.Info(msg, zapFields...)
 }
 
 // Warn logs warn-level log
-func (w *Wrapper) Warn(ctx context.Context, msg string, fields ...logger.Field) {
+func (w *Wrapper) Warn(msg string, fields ...logger.Field) {
 	zapFields := w.transformToZapFields(fields...)
 	w.logger.Warn(msg, zapFields...)
 }
 
 // Error logs error-level log
-func (w *Wrapper) Error(ctx context.Context, msg string, fields ...logger.Field) {
+func (w *Wrapper) Error(msg string, fields ...logger.Field) {
 	zapFields := w.transformToZapFields(fields...)
 	w.logger.Error(msg, zapFields...)
 }
