@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: slack_mention
+    build:
+      context: .
+      target: build
+    command: /go/bin/crawl-data-slack ${COMMAND}
+    environment:
+      - GROUPWARE_ID=${GROUPWARE_ID}
+      - GROUPWARE_PW=${GROUPWARE_PW}
+      - SLACK_API_KEY=${SLACK_API_KEY}
+    volumes:
+      - ./driver:/app/driver/
