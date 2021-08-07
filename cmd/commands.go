@@ -18,16 +18,17 @@ var Commands = []*cli.Command{
 		},
 	},
 	{
-		Name: "cron",
+		Name: "restriction",
 		Subcommands: []*cli.Command{
 			{
-				Name: "exclude",
+				Name: "add",
 				Flags: []cli.Flag{
-					&cli.BoolFlag{Name: "expression"},
+					&cli.TimestampFlag{Name: "start_date"},
+					&cli.TimestampFlag{Name: "end_date"},
+					&cli.TimestampFlag{Name: "hour_from"},
+					&cli.TimestampFlag{Name: "hour_to"},
 				},
-				Action: func(ctx *cli.Context) error {
-					return nil
-				},
+				Action: AddRestriction,
 			},
 		},
 	},
@@ -38,7 +39,14 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 	return nil
 }
 
-// ExcludeCronExpression excludes
-func ExcludeCronExpression(ctx *cli.Context) error {
+// AddRestriction adds a restriction
+func AddRestriction(ctx *cli.Context) error {
+	// logger, err := zap.NewDevelopment()
+	// if err != nil {
+	// 	return err
+	// }
+	// var usecase Usecase = crawler.NewUseCase(
+	// 	logger,
+	// )
 	return nil
 }

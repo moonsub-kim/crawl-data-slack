@@ -50,7 +50,7 @@ func (u UseCase) isRestricted(t time.Time) (bool, error) {
 		return false, err
 	}
 
-	return restriction.ID != 0, nil
+	return restriction.Crawler != "", nil
 }
 
 func (u UseCase) filterEvents(crawledEvents []Event, notifiedEvents []Event) []Event {
