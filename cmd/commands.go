@@ -6,8 +6,9 @@ import (
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler/repository"
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/groupware"
-	"github.com/Buzzvil/crawl-data-slack/internal/pkg/slack"
+	"github.com/Buzzvil/crawl-data-slack/internal/pkg/slackclient"
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/zaplogger"
+	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
@@ -42,13 +43,22 @@ var Commands = []*cli.Command{
 			},
 		},
 	},
+	{
+		Name: "test",
+		Subcommands: []*cli.Command{
+			{
+				Name:   "slack",
+				Action: TestSlack,
+			},
+		},
+	},
 }
 
 // CrawlGroupWareDeclinedPayments crawls declied payments from groupware and notify the events
 func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 	// groupWareID := os.Getenv("GROUPWARE_ID")
 	// groupWarePW := os.Getenv("GROUPWARE_PW")
-	// slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
+	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	mysqlConn := os.Getenv("MYSQL_CONN")
 
 	zapLogger, err := zap.NewDevelopment()
@@ -73,14 +83,15 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 
 	repository := repository.NewRepository(log, db)
 	groupwareCrawler := groupware.NewCrawler()
-	slackService := slack.NewService()
+	api := slack.New(slackBotToken)
+	client := slackclient.NewClient(log, api)
 
 	usecase := crawler.NewUseCase(
 		log,
 		repository,
 		groupwareCrawler,
-		slackService,
-		slackService,
+		client,
+		client,
 	)
 
 	usecase.Work("groupware", "declined_payments")
@@ -89,5 +100,29 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 
 // AddRestriction adds a restriction
 func AddRestriction(ctx *cli.Context) error {
+	return nil
+}
+
+func TestSlack(ctx *cli.Context) error {
+	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
+	zapLogger, err := zap.NewDevelopment()
+	if err != nil {
+		return err
+	}
+	log := zaplogger.NewZapLoggerWrapper(zapLogger)
+
+	api := slack.New(slackBotToken)
+	client := slackclient.NewClient(log, api)
+
+	client.Notify(crawler.Notification{
+		User: crawler.User{
+			ID: "UJBG25A04",
+		},
+		Event: crawler.Event{
+			Crawler: "groupware",
+			Job:     "declined_payments",
+		},
+	})
+
 	return nil
 }

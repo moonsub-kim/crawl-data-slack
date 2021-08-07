@@ -7,4 +7,6 @@ type Repository interface {
 	SaveEvents(events []Event) error
 	GetRestriction(crawler string, job string) (Restriction, error)
 	SaveRestriction(restriction Restriction) error
+	GetUser(userName string) (User, error)
+	SaveUsers(users []User) error
 }

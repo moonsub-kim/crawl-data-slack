@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"errors"
 	"time"
 
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/logger"
@@ -108,7 +109,30 @@ func (u UseCase) notify(events []Event) error {
 }
 
 func (u UseCase) getUser(userName string) (User, error) {
-	return User{}, nil
+	user, err := u.repository.GetUser(userName)
+	if err != nil {
+		return User{}, err
+	} else if user.ID == "" {
+		// sync with slack
+		users, err := u.userService.GetUsers()
+		if err != nil {
+			return User{}, err
+		}
+
+		err = u.repository.SaveUsers(users)
+		if err != nil {
+			return User{}, err
+		}
+
+		user, err := u.repository.GetUser(userName)
+		if err != nil {
+			return User{}, err
+		} else if user.ID == "" {
+			return User{}, errors.New("empty user")
+		}
+	}
+
+	return user, nil
 }
 
 func (u UseCase) AddRestriction(restriction Restriction) error {

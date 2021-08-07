@@ -48,6 +48,14 @@ func (m mapper) mapUserToModelUser(u crawler.User) User {
 	}
 }
 
+func (m mapper) mapUsersToModelUsers(users []crawler.User) []User {
+	var modelUsers []User
+	for _, u := range users {
+		modelUsers = append(modelUsers, m.mapUserToModelUser(u))
+	}
+	return modelUsers
+}
+
 func (m mapper) mapModelUserToUser(u User) crawler.User {
 	return crawler.User{
 		ID:   u.ID,
