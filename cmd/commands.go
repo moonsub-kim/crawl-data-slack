@@ -2,12 +2,11 @@ package main
 
 import (
 	"os"
+	"reflect"
 
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler/repository"
-	"github.com/Buzzvil/crawl-data-slack/internal/pkg/groupware"
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/slackclient"
-	"github.com/Buzzvil/crawl-data-slack/internal/pkg/zaplogger"
 	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -46,10 +45,8 @@ var Commands = []*cli.Command{
 	{
 		Name: "test",
 		Subcommands: []*cli.Command{
-			{
-				Name:   "slack",
-				Action: TestSlack,
-			},
+			{Name: "slack", Action: TestSlack},
+			{Name: "chrome", Action: TestChrome},
 		},
 	},
 }
@@ -61,11 +58,11 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	mysqlConn := os.Getenv("MYSQL_CONN")
 
-	zapLogger, err := zap.NewDevelopment()
+	logger, err := zap.NewDevelopment()
 	if err != nil {
 		return err
 	}
-	log := zaplogger.NewZapLoggerWrapper(zapLogger)
+	logger.Info("CrawlGroupWareDeclinedPayments")
 
 	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
 	if err != nil {
@@ -81,20 +78,24 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 		return err
 	}
 
-	repository := repository.NewRepository(log, db)
-	groupwareCrawler := groupware.NewCrawler()
+	repository := repository.NewRepository(logger, db)
+	var groupwareCrawler crawler.Crawler // := groupware.NewCrawler(log)
 	api := slack.New(slackBotToken)
-	client := slackclient.NewClient(log, api)
+	client := slackclient.NewClient(logger, api)
 
 	usecase := crawler.NewUseCase(
-		log,
+		logger,
 		repository,
 		groupwareCrawler,
 		client,
 		client,
 	)
 
-	usecase.Work("groupware", "declined_payments")
+	err = usecase.Work("groupware", "declined_payments")
+	if err != nil {
+		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
+		return err
+	}
 	return nil
 }
 
@@ -105,14 +106,13 @@ func AddRestriction(ctx *cli.Context) error {
 
 func TestSlack(ctx *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
-	zapLogger, err := zap.NewDevelopment()
+	logger, err := zap.NewDevelopment()
 	if err != nil {
 		return err
 	}
-	log := zaplogger.NewZapLoggerWrapper(zapLogger)
 
 	api := slack.New(slackBotToken)
-	client := slackclient.NewClient(log, api)
+	client := slackclient.NewClient(logger, api)
 
 	client.Notify(crawler.Notification{
 		User: crawler.User{
@@ -124,5 +124,9 @@ func TestSlack(ctx *cli.Context) error {
 		},
 	})
 
+	return nil
+}
+
+func TestChrome(ctx *cli.Context) error {
 	return nil
 }

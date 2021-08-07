@@ -9,6 +9,7 @@ type Event struct {
 	Job      string
 	UserName string
 	ID       string // ID is determined by Crawler
+	Name     string
 }
 
 type User struct {

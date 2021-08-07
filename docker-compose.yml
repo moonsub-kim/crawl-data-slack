@@ -6,6 +6,7 @@ services:
     build:
       context: .
       target: build
+    # command: bash -c "go run test/test.go && ls -alh test/ && ls -alh ./"
     command: bash -c "sleep 1 && echo ${COMMAND} && /go/bin/crawl-data-slack ${COMMAND}"
     environment:
       - GROUPWARE_ID=${GROUPWARE_ID}

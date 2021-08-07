@@ -4,11 +4,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/Buzzvil/crawl-data-slack/internal/pkg/logger"
+	"go.uber.org/zap"
 )
 
 type UseCase struct {
-	logger      logger.Logger
+	logger      *zap.Logger
 	repository  Repository
 	crawler     Crawler
 	notifier    Notifier
@@ -25,23 +25,33 @@ func (u UseCase) Work(crawler string, job string) error {
 		return nil
 	}
 
-	crawledEvents, err := u.crawler.Crawl()
+	// crawledEvents, err := u.crawler.Crawl()
+	// if err != nil {
+	// 	return err
+	// }
+	crawledEvents := []Event{
+		{
+			Crawler:  "groupware",
+			Job:      "declined_payout",
+			UserName: "raf.kim",
+			ID:       "1",
+			Name:     "declined_notification",
+		},
+		{
+			Crawler:  "groupware",
+			Job:      "declined_payout",
+			UserName: "lucas.gu",
+			ID:       "1",
+			Name:     "notified_declined_notification",
+		},
+	}
+
+	events, err := u.filterEvents(crawledEvents)
 	if err != nil {
 		return err
 	}
 
-	notifiedEvents, err := u.repository.GetEvents(time.Now().AddDate(0, 0, -1))
-	if err != nil {
-		return err
-	}
-	newEvents := u.filterEvents(crawledEvents, notifiedEvents)
-
-	err = u.repository.SaveEvents(newEvents)
-	if err != nil {
-		return err
-	}
-
-	return u.notify(newEvents)
+	return u.notify(events)
 }
 
 func (u UseCase) isRestricted(crawler string, job string) (bool, error) {
@@ -58,26 +68,21 @@ func (u UseCase) isRestricted(crawler string, job string) (bool, error) {
 	return false, nil
 }
 
-func (u UseCase) filterEvents(crawledEvents []Event, notifiedEvents []Event) []Event {
-	toMap := func(events []Event) map[string]Event {
-		m := map[string]Event{}
-		for _, e := range events {
-			m[e.ID] = e
+// save events and returns saved events
+func (u UseCase) filterEvents(crawledEvents []Event) ([]Event, error) {
+	var events []Event
+	for _, e := range crawledEvents {
+		err := u.repository.SaveEvent(e)
+		if errors.As(err, &AlreadyExistsError{}) {
+			u.logger.Info("Continue")
+			continue
+		} else if err != nil {
+			return nil, err
 		}
-		return m
+		events = append(events, e)
 	}
 
-	crawled := toMap(crawledEvents)
-	notified := toMap(notifiedEvents)
-	new := []Event{}
-	for id, e := range crawled {
-		_, ok := notified[id]
-		if !ok {
-			new = append(new, e)
-		}
-	}
-
-	return new
+	return events, nil
 }
 
 func (u UseCase) notify(events []Event) error {
@@ -96,10 +101,10 @@ func (u UseCase) notify(events []Event) error {
 		if err != nil {
 			u.logger.Error(
 				"error on notify",
-				logger.Field{Key: "error", Value: err},
-				logger.Field{Key: "index", Value: i},
-				logger.Field{Key: "event", Value: e},
-				logger.Field{Key: "events", Value: events},
+				zap.Error(err),
+				zap.Int("index", i),
+				zap.Any("event", e),
+				zap.Any("events", events),
 			)
 			return err
 		}
@@ -140,7 +145,7 @@ func (u UseCase) AddRestriction(restriction Restriction) error {
 }
 
 func NewUseCase(
-	logger logger.Logger,
+	logger *zap.Logger,
 	repository Repository,
 	crawler Crawler,
 	notifier Notifier,

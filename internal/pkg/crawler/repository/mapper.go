@@ -13,32 +13,8 @@ func (m mapper) mapEventToModelEvent(e crawler.Event) Event {
 		Job:      e.Job,
 		UserName: e.UserName,
 		ID:       e.ID,
+		Name:     e.Name,
 	}
-}
-
-func (m mapper) mapEventsToModelEvents(events []crawler.Event) []Event {
-	var modelEvents []Event
-	for _, e := range events {
-		modelEvents = append(modelEvents, m.mapEventToModelEvent(e))
-	}
-	return modelEvents
-}
-
-func (m mapper) mapModelEventToEvent(e Event) crawler.Event {
-	return crawler.Event{
-		Crawler:  e.Crawler,
-		Job:      e.Job,
-		UserName: e.UserName,
-		ID:       e.ID,
-	}
-}
-
-func (m mapper) mapModelEventsToEvents(events []Event) []crawler.Event {
-	var modelEvents []crawler.Event
-	for _, e := range events {
-		modelEvents = append(modelEvents, m.mapModelEventToEvent(e))
-	}
-	return modelEvents
 }
 
 func (m mapper) mapUserToModelUser(u crawler.User) User {

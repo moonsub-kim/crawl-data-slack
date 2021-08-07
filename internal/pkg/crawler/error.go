@@ -1,9 +1,8 @@
 package crawler
 
-type InvalidUserNameError struct {
-	message string
+type AlreadyExistsError struct {
 }
 
-func (e InvalidUserNameError) Error() string {
-	return e.message
+func (AlreadyExistsError) Error() string {
+	return "already exists"
 }

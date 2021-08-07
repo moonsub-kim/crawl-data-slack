@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
-	"github.com/Buzzvil/crawl-data-slack/internal/pkg/logger"
 	"github.com/slack-go/slack"
+	"go.uber.org/zap"
 )
 
 const CHANNEL_ID = "G015JFASK7Z"
@@ -19,7 +19,7 @@ var messageBuilder = map[string]map[string](func(crawler.Notification) string){
 }
 
 type Client struct {
-	logger logger.Logger
+	logger *zap.Logger
 	api    *slack.Client
 	mapper mapper
 }
@@ -39,7 +39,7 @@ func (c Client) GetUsers() ([]crawler.User, error) {
 	return c.mapper.mapSlackUsersToUsers(users), nil
 }
 
-func NewClient(logger logger.Logger, client *slack.Client) *Client {
+func NewClient(logger *zap.Logger, client *slack.Client) *Client {
 	return &Client{
 		logger: logger,
 		api:    client,

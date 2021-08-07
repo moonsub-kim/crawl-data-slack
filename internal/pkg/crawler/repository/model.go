@@ -17,10 +17,11 @@ func (Restriction) TableName() string {
 }
 
 type Event struct {
-	Crawler   string    `gorm:"type:varchar(128);uniqueIndex:crawler_job_id"`
-	Job       string    `gorm:"type:varchar(128);uniqueIndex:crawler_job_id"`
-	UserName  string    `gorm:"type:varchar(128);uniqueIndex:crawler_job_id"`
-	ID        string    `gorm:"type:varchar(128);uniqueIndex:crawler_job_id"`
+	Crawler   string    `gorm:"type:varchar(128)"`
+	Job       string    `gorm:"type:varchar(128)"`
+	UserName  string    `gorm:"type:varchar(128)"`
+	ID        string    `gorm:"type:varchar(128);uniqueIndex:id_name"`
+	Name      string    `gorm:"type:varchar(128);uniqueIndex:id_name"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 }
 

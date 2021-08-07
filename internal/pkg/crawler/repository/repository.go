@@ -2,36 +2,29 @@ package repository
 
 import (
 	"errors"
-	"time"
+	"strings"
 
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
-	"github.com/Buzzvil/crawl-data-slack/internal/pkg/logger"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 type Repository struct {
-	logger logger.Logger
+	logger *zap.Logger
 	db     *gorm.DB
 	mapper mapper
 }
 
-func (r Repository) GetEvents(from time.Time) ([]crawler.Event, error) {
-	var events []Event
-	err := r.db.Where("created_at >= ?", from).Find(&events).Error
-	if err != nil {
-		return nil, err
+func (r Repository) SaveEvent(event crawler.Event) error {
+	e := r.mapper.mapEventToModelEvent(event)
+	err := r.db.Create(&e).Error
+	if strings.Contains(err.Error(), "1062") {
+		return crawler.AlreadyExistsError{}
+	} else if err != nil {
+		return err
 	}
 
-	return r.mapper.mapModelEventsToEvents(events), nil
-}
-
-func (r Repository) SaveEvents(events []crawler.Event) error {
-	if len(events) == 0 {
-		return nil
-	}
-
-	modelEvents := r.mapper.mapEventsToModelEvents(events)
-	return r.db.Create(&modelEvents).Error
+	return nil
 }
 
 func (r Repository) GetRestriction(c string, j string) (crawler.Restriction, error) {
@@ -69,7 +62,7 @@ func (r Repository) SaveUsers(users []crawler.User) error {
 	return r.db.Create(&modelUsers).Error
 }
 
-func NewRepository(logger logger.Logger, db *gorm.DB) *Repository {
+func NewRepository(logger *zap.Logger, db *gorm.DB) *Repository {
 	return &Repository{
 		logger: logger,
 		db:     db,
