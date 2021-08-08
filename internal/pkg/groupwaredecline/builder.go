@@ -11,7 +11,7 @@ import (
 type eventBuilder struct {
 }
 
-func (b eventBuilder) buildEvents(dtos []DTO) ([]crawler.Event, error) {
+func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string) ([]crawler.Event, error) {
 	var events []crawler.Event
 	for _, dto := range dtos {
 		drafterName, err := b.parseDrafter(dto.Drafter)
@@ -27,16 +27,16 @@ func (b eventBuilder) buildEvents(dtos []DTO) ([]crawler.Event, error) {
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  "groupware",
-				Job:      "declined",
+				Crawler:  crawlerName,
+				Job:      jobName,
 				UserName: drafterName,
 				ID:       dto.ID,
 				Name:     "declined",
 				Message:  fmt.Sprintf("결재(%s)가 반려되었습니다. <https://gr.buzzvil.com/gw/userMain.do|그룹웨어>에서 확인해주세요.", dto.DocName),
 			},
 			// crawler.Event{
-			// 	Crawler:  "crawler",
-			// 	Job:      "declined",
+			// 	Crawler:  crawlerName,
+			// 	Job:      jobName,
 			// 	UserName: "raf.kim",
 			// 	ID:       dto.ID,
 			// 	Name:     "notified_declined",

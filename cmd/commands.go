@@ -119,7 +119,7 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 		client,
 	)
 
-	err = usecase.Work("groupware", "declined_payments")
+	err = usecase.Work(groupwareCrawler.GetCrawlerName(), groupwareCrawler.GetJobName())
 	if err != nil {
 		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
 		return err

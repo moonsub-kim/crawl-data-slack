@@ -19,6 +19,9 @@ type Crawler struct {
 	pw           string
 }
 
+func (c Crawler) GetCrawlerName() string { return "groupware" }
+func (c Crawler) GetJobName() string     { return "declined_payments" }
+
 func (c Crawler) Crawl() ([]crawler.Event, error) {
 	var jsonBody string
 	var dtos []DTO
@@ -98,7 +101,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 
-	events, err := c.eventBuilder.buildEvents(dtos)
+	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName())
 	if err != nil {
 		return nil, err
 	}
