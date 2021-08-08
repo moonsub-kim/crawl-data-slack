@@ -14,6 +14,7 @@ func (m mapper) mapEventToModelEvent(e crawler.Event) Event {
 		UserName: e.UserName,
 		ID:       e.ID,
 		Name:     e.Name,
+		Message:  e.Message,
 	}
 }
 

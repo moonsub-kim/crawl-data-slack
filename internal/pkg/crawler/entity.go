@@ -7,9 +7,10 @@ import (
 type Event struct {
 	Crawler  string
 	Job      string
-	UserName string
+	UserName string // <firstname>.<lastname>
 	ID       string // ID is determined by Crawler
 	Name     string
+	Message  string
 }
 
 type User struct {

@@ -1,22 +1,12 @@
 package slackclient
 
 import (
-	"fmt"
-
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
 	"github.com/slack-go/slack"
 	"go.uber.org/zap"
 )
 
 const CHANNEL_ID = "G015JFASK7Z"
-
-var messageBuilder = map[string]map[string](func(crawler.Notification) string){
-	"groupware": map[string]func(crawler.Notification) string{
-		"declined_payments": func(n crawler.Notification) string {
-			return fmt.Sprintf("<@%s> 문서가 반려되었습니다. 그룹웨어에서 확인해주세요.", n.User.ID)
-		},
-	},
-}
 
 type Client struct {
 	logger *zap.Logger
@@ -25,8 +15,7 @@ type Client struct {
 }
 
 func (c Client) Notify(n crawler.Notification) error {
-	message := messageBuilder[n.Event.Crawler][n.Event.Job](n)
-	_, _, _, err := c.api.SendMessage(CHANNEL_ID, slack.MsgOptionText(message, false))
+	_, _, err := c.api.PostMessage(n.User.ID, slack.MsgOptionText(n.Event.Message, false))
 	return err
 }
 
@@ -36,7 +25,14 @@ func (c Client) GetUsers() ([]crawler.User, error) {
 		return nil, err
 	}
 
-	return c.mapper.mapSlackUsersToUsers(users), nil
+	var activeUsers []slack.User
+	for _, u := range users {
+		if !u.Deleted && !u.IsBot && !u.IsRestricted {
+			activeUsers = append(activeUsers, u)
+		}
+	}
+
+	return c.mapper.mapSlackUsersToUsers(activeUsers), nil
 }
 
 func NewClient(logger *zap.Logger, client *slack.Client) *Client {

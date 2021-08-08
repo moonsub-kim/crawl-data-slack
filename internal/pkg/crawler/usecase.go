@@ -25,25 +25,9 @@ func (u UseCase) Work(crawler string, job string) error {
 		return nil
 	}
 
-	// crawledEvents, err := u.crawler.Crawl()
-	// if err != nil {
-	// 	return err
-	// }
-	crawledEvents := []Event{
-		{
-			Crawler:  "groupware",
-			Job:      "declined_payout",
-			UserName: "raf.kim",
-			ID:       "1",
-			Name:     "declined_notification",
-		},
-		{
-			Crawler:  "groupware",
-			Job:      "declined_payout",
-			UserName: "lucas.gu",
-			ID:       "1",
-			Name:     "notified_declined_notification",
-		},
+	crawledEvents, err := u.crawler.Crawl()
+	if err != nil {
+		return err
 	}
 
 	events, err := u.filterEvents(crawledEvents)
@@ -105,6 +89,7 @@ func (u UseCase) notify(events []Event) error {
 				zap.Int("index", i),
 				zap.Any("event", e),
 				zap.Any("events", events),
+				zap.Any("notification", n),
 			)
 			return err
 		}
@@ -129,7 +114,7 @@ func (u UseCase) getUser(userName string) (User, error) {
 			return User{}, err
 		}
 
-		user, err := u.repository.GetUser(userName)
+		user, err = u.repository.GetUser(userName)
 		if err != nil {
 			return User{}, err
 		} else if user.ID == "" {

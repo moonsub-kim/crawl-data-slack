@@ -5,8 +5,7 @@ init:
 	GROUPWARE_PW=\n\
 	SLACK_BOT_TOKEN=\n\
 	" >> .env
-	@mkdir -p driver
 
 cmd=
 up:
-	@COMMAND=${cmd} docker-compose up --build app
+	@COMMAND=${cmd} docker-compose up --build app chrome

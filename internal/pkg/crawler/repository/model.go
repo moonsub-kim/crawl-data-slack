@@ -22,6 +22,7 @@ type Event struct {
 	UserName  string    `gorm:"type:varchar(128)"`
 	ID        string    `gorm:"type:varchar(128);uniqueIndex:id_name"`
 	Name      string    `gorm:"type:varchar(128);uniqueIndex:id_name"`
+	Message   string    `gorm:"type:varchar(1024)"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 }
 

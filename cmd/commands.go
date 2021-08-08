@@ -1,12 +1,22 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"reflect"
 
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler/repository"
+	"github.com/Buzzvil/crawl-data-slack/internal/pkg/groupwaredecline"
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/slackclient"
+	"github.com/chromedp/chromedp"
 	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -43,20 +53,21 @@ var Commands = []*cli.Command{
 		},
 	},
 	{
-		Name: "test",
+		Name:        "test",
 		Subcommands: []*cli.Command{
-			{Name: "slack", Action: TestSlack},
-			{Name: "chrome", Action: TestChrome},
+			// {Name: "slack", Action: TestSlack},
+			// {Name: "chrome", Action: TestChrome},
 		},
 	},
 }
 
 // CrawlGroupWareDeclinedPayments crawls declied payments from groupware and notify the events
 func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
-	// groupWareID := os.Getenv("GROUPWARE_ID")
-	// groupWarePW := os.Getenv("GROUPWARE_PW")
+	groupWareID := os.Getenv("GROUPWARE_ID")
+	groupWarePW := os.Getenv("GROUPWARE_PW")
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	mysqlConn := os.Getenv("MYSQL_CONN")
+	chromeHost := os.Getenv("CHROME_HOST")
 
 	logger, err := zap.NewDevelopment()
 	if err != nil {
@@ -78,8 +89,25 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 		return err
 	}
 
+	url, err := getChromeURL(logger, chromeHost)
+	if err != nil {
+		return err
+	}
+	logger.Info("chrome url", zap.String("url", url))
+
+	devtoolsWSURL := flag.String("devtools-ws-url", url, "DevTools Websocket URL")
+	allocatorctx, cancel := chromedp.NewRemoteAllocator(context.Background(), *devtoolsWSURL)
+	defer cancel()
+
+	chromectx, cancel := chromedp.NewContext(
+		allocatorctx,
+		// chromedp.WithLogf(log.Printf),
+		// chromedp.WithDebugf(log.Printf),
+	)
+	defer cancel()
+
 	repository := repository.NewRepository(logger, db)
-	var groupwareCrawler crawler.Crawler // := groupware.NewCrawler(log)
+	groupwareCrawler := groupwaredecline.NewCrawler(logger, chromectx, groupWareID, groupWarePW)
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
 
@@ -96,6 +124,7 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
 		return err
 	}
+
 	return nil
 }
 
@@ -104,29 +133,44 @@ func AddRestriction(ctx *cli.Context) error {
 	return nil
 }
 
-func TestSlack(ctx *cli.Context) error {
-	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
-	logger, err := zap.NewDevelopment()
+func getChromeURL(logger *zap.Logger, chromeHost string) (string, error) {
+	endpoint := fmt.Sprintf("http://%s/json/version", chromeHost)
+	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
-		return err
+		return "", err
+	}
+	req.Host = "localhost"
+
+	// request to chrome
+	res, err := (&http.Client{}).Do(req)
+	if err != nil {
+		logger.Error("get", zap.Error(err))
+		return "", err
+	}
+	defer res.Body.Close()
+
+	// read buffer
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		logger.Error("read", zap.Error(err))
+		return "", err
 	}
 
-	api := slack.New(slackBotToken)
-	client := slackclient.NewClient(logger, api)
+	var m map[string]string
+	err = json.Unmarshal(body, &m)
+	if err != nil {
+		return "", err
+	}
 
-	client.Notify(crawler.Notification{
-		User: crawler.User{
-			ID: "UJBG25A04",
-		},
-		Event: crawler.Event{
-			Crawler: "groupware",
-			Job:     "declined_payments",
-		},
-	})
+	wsURL, ok := m["webSocketDebuggerUrl"]
+	if !ok {
+		return "", errors.New("webSocketDebuggerUrl is not found")
+	}
 
-	return nil
-}
-
-func TestChrome(ctx *cli.Context) error {
-	return nil
+	u, err := url.Parse(wsURL)
+	if err != nil {
+		return "", err
+	}
+	u.Host = chromeHost // replace to chrome host
+	return u.String(), nil
 }

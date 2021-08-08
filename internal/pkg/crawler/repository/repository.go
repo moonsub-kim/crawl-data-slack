@@ -7,6 +7,7 @@ import (
 	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Repository struct {
@@ -18,7 +19,7 @@ type Repository struct {
 func (r Repository) SaveEvent(event crawler.Event) error {
 	e := r.mapper.mapEventToModelEvent(event)
 	err := r.db.Create(&e).Error
-	if strings.Contains(err.Error(), "1062") {
+	if err != nil && strings.Contains(err.Error(), "1062") {
 		return crawler.AlreadyExistsError{}
 	} else if err != nil {
 		return err
@@ -47,7 +48,7 @@ func (r Repository) SaveRestriction(restriction crawler.Restriction) error {
 
 func (r Repository) GetUser(userName string) (crawler.User, error) {
 	var user User
-	err := r.db.First(&user, "user_name = ?", userName).Error
+	err := r.db.First(&user, "name = ?", userName).Error
 	if errors.As(err, &gorm.ErrRecordNotFound) {
 		return crawler.User{}, nil
 	} else if err != nil {
@@ -59,7 +60,9 @@ func (r Repository) GetUser(userName string) (crawler.User, error) {
 
 func (r Repository) SaveUsers(users []crawler.User) error {
 	modelUsers := r.mapper.mapUsersToModelUsers(users)
-	return r.db.Create(&modelUsers).Error
+	return r.db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "id"}}, // key colume
+	}).Create(&modelUsers).Error
 }
 
 func NewRepository(logger *zap.Logger, db *gorm.DB) *Repository {
