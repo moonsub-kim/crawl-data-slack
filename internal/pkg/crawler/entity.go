@@ -8,7 +8,7 @@ type Event struct {
 	Crawler  string
 	Job      string
 	UserName string // <firstname>.<lastname>
-	ID       string // ID is determined by Crawler
+	UID      string // UID is determined by Crawler
 	Name     string
 	Message  string
 }

@@ -60,7 +60,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		chromedp.Evaluate(
 			`
 			function map_object(arr) {
-				const indexMap = {2: "id", 3: "doc_name", 4: "request_date", 9: "drafter", 10: "status"};
+				const indexMap = {2: "uid", 3: "doc_name", 4: "request_date", 9: "drafter", 10: "status"};
 				var keys = Object.keys(indexMap);
 				var obj = {};
 

@@ -12,7 +12,7 @@ func (m mapper) mapEventToModelEvent(e crawler.Event) Event {
 		Crawler:  e.Crawler,
 		Job:      e.Job,
 		UserName: e.UserName,
-		ID:       e.ID,
+		UID:      e.UID,
 		Name:     e.Name,
 		Message:  e.Message,
 	}

@@ -6,8 +6,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const CHANNEL_ID = "G015JFASK7Z"
-
 type Client struct {
 	logger *zap.Logger
 	api    *slack.Client
@@ -16,6 +14,8 @@ type Client struct {
 
 func (c Client) Notify(n crawler.Notification) error {
 	_, _, err := c.api.PostMessage(n.User.ID, slack.MsgOptionText(n.Event.Message, false))
+
+	c.logger.Info("notify", zap.Any("notification", n), zap.Error(err))
 	return err
 }
 
