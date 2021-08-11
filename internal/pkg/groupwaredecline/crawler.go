@@ -26,7 +26,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	var jsonBody string
 	var dtos []DTO
 
-	yesterday := time.Now().Add(time.Hour*9).AddDate(0, -2, -1).Format("2006-01-02") // UTCNOW -> KST -> yesterday -> formating
+	yesterday := time.Now().Add(time.Hour*9).AddDate(0, 0, -1).Format("2006-01-02") // UTCNOW -> KST -> yesterday -> formating
 	c.logger.Info("yesterday", zap.String("yesterday", yesterday))
 	err := chromedp.Run(
 		c.ctx,
