@@ -27,9 +27,11 @@ func (c Client) GetUsers() ([]crawler.User, error) {
 
 	var activeUsers []slack.User
 	for _, u := range users {
-		if !u.Deleted && !u.IsBot && !u.IsRestricted {
-			activeUsers = append(activeUsers, u)
+		if u.Deleted || u.IsBot || u.IsRestricted {
+			continue
 		}
+
+		activeUsers = append(activeUsers, u)
 	}
 
 	return c.mapper.mapSlackUsersToUsers(activeUsers), nil

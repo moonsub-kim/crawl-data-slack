@@ -8,7 +8,7 @@ import (
 type mapper struct {
 }
 
-func (mapper) mapSlackUserToUser(user slack.User) crawler.User {
+func (m mapper) mapSlackUserToUser(user slack.User) crawler.User {
 	return crawler.User{
 		ID:   user.ID,
 		Name: user.Name,
