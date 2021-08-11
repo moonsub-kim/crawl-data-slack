@@ -20,9 +20,9 @@ func (Restriction) TableName() string {
 type Event struct {
 	Crawler   string    `gorm:"type:varchar(128)"`
 	Job       string    `gorm:"type:varchar(128)"`
-	UserName  string    `gorm:"type:varchar(128);uniqueIndex:uid_username"`
-	UID       string    `gorm:"type:varchar(128);uniqueIndex:uid_username"`
-	Name      string    `gorm:"type:varchar(128)"`
+	UserName  string    `gorm:"type:varchar(128)"`
+	UID       string    `gorm:"type:varchar(128);uniqueIndex:uid_name"`
+	Name      string    `gorm:"type:varchar(128);uniqueIndex:uid_name"`
 	Message   string    `gorm:"type:varchar(1024)"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 }
