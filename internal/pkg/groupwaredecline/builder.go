@@ -19,10 +19,10 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string) ([]cr
 			return nil, err
 		}
 
-		// _, reviewerName, err := b.parseStatus((dto.Status))
-		// if err != nil {
-		// 	return nil, err
-		// }
+		_, reviewerName, err := b.parseStatus((dto.Status))
+		if err != nil {
+			return nil, err
+		}
 
 		events = append(
 			events,
@@ -34,14 +34,14 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string) ([]cr
 				Name:     "declined",
 				Message:  fmt.Sprintf("결재(%s)가 반려되었습니다. <https://gr.buzzvil.com/gw/userMain.do|그룹웨어>에서 확인해주세요.", dto.DocName),
 			},
-			// crawler.Event{
-			// 	Crawler:  crawlerName,
-			// 	Job:      jobName,
-			// 	UserName: "raf.kim",
-			// 	ID:       dto.ID,
-			// 	Name:     "notified_declined",
-			// 	Message:  fmt.Sprintf("%s 에게 결재(%s) 반려 알림이 전달되었습니다.", "raf.kim", dto.DocName), // TODO drafterName
-			// },
+			crawler.Event{
+				Crawler:  crawlerName,
+				Job:      jobName,
+				UserName: reviewerName,
+				ID:       dto.ID,
+				Name:     "notified_declined",
+				Message:  fmt.Sprintf("%s 에게 결재(%s) 반려 알림이 전달되었습니다.", drafterName, dto.DocName), // TODO drafterName
+			},
 		)
 	}
 
