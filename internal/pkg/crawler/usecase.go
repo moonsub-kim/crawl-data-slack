@@ -44,11 +44,12 @@ func (u UseCase) isAllowed(crawler string, job string) (bool, error) {
 		return false, err
 	}
 
-	now := time.Now()
+	now := time.Now().Add(time.Hour * 9) // kst변환
+	u.logger.Info("isAllowed()", zap.Any("restriction", r))
 
 	// no restriction record
 	if now.After(r.StartDate) && now.Before(r.EndDate) {
-		return false, nil
+		return true, nil
 	}
 
 	// allow cond   return
