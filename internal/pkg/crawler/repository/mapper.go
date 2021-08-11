@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
 
 type mapper struct {

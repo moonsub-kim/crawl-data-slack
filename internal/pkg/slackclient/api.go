@@ -1,7 +1,7 @@
 package slackclient
 
 import (
-	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/slack-go/slack"
 	"go.uber.org/zap"
 )

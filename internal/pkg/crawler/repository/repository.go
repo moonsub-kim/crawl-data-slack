@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"

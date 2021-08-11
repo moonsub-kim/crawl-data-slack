@@ -1,4 +1,4 @@
-module github.com/Buzzvil/crawl-data-slack
+module github.com/moonsub-kim/crawl-data-slack
 
 go 1.16
 

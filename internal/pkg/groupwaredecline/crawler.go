@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Buzzvil/crawl-data-slack/internal/pkg/crawler"
 	"github.com/chromedp/chromedp"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"go.uber.org/zap"
 )
 
