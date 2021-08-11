@@ -83,7 +83,7 @@ func (u UseCase) notify(events []Event) error {
 		err = u.notifier.Notify(n)
 		if err != nil {
 			u.logger.Error(
-				"error on notify",
+				"notify error",
 				zap.Error(err),
 				zap.Int("index", i),
 				zap.Any("event", e),

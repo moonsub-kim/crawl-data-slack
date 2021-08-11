@@ -17,7 +17,7 @@ func (c Client) Notify(n crawler.Notification) error {
 	c.logger.Info(
 		"notify",
 		zap.Any("notification", n),
-		zap.Error(err),
+		zap.Any("err", err),
 	)
 	return err
 }
