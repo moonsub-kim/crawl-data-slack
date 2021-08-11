@@ -20,6 +20,7 @@ import (
 	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -69,11 +70,7 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 	mysqlConn := os.Getenv("MYSQL_CONN")
 	chromeHost := os.Getenv("CHROME_HOST")
 
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		return err
-	}
-	logger.Info("CrawlGroupWareDeclinedPayments")
+	logger := zapLogger()
 
 	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
 	if err != nil {
@@ -173,4 +170,20 @@ func getChromeURL(logger *zap.Logger, chromeHost string) (string, error) {
 	}
 	u.Host = chromeHost // replace to chrome host
 	return u.String(), nil
+}
+
+func zapLogger() *zap.Logger {
+	// Create logger configuration
+	encoderCfg := zap.NewProductionEncoderConfig()
+	encoderCfg.TimeKey = "timestamp"
+	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+
+	// Create logger with configurations
+	zapLogger := zap.New(zapcore.NewCore(
+		zapcore.NewJSONEncoder(encoderCfg),
+		zapcore.Lock(os.Stdout),
+		zap.NewAtomicLevelAt(zapcore.InfoLevel),
+	))
+
+	return zapLogger
 }
