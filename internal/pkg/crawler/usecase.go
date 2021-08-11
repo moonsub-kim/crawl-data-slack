@@ -58,7 +58,6 @@ func (u UseCase) filterEvents(crawledEvents []Event) ([]Event, error) {
 	for _, e := range crawledEvents {
 		err := u.repository.SaveEvent(e)
 		if errors.As(err, &AlreadyExistsError{}) {
-			u.logger.Info("Continue")
 			continue
 		} else if err != nil {
 			return nil, err

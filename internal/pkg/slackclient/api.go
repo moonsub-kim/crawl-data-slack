@@ -14,14 +14,18 @@ type Client struct {
 
 func (c Client) Notify(n crawler.Notification) error {
 	_, _, err := c.api.PostMessage(n.User.ID, slack.MsgOptionText(n.Event.Message, false))
-
-	c.logger.Info("notify", zap.Any("notification", n), zap.Error(err))
+	c.logger.Info(
+		"notify",
+		zap.Any("notification", n),
+		zap.Error(err),
+	)
 	return err
 }
 
 func (c Client) GetUsers() ([]crawler.User, error) {
 	users, err := c.api.GetUsers()
 	if err != nil {
+		c.logger.Error("getUsers", zap.Error(err))
 		return nil, err
 	}
 
