@@ -6,7 +6,6 @@ services:
     build:
       context: .
       target: build
-    # command: bash -c "go run test/test.go && ls -alh test/ && ls -alh ./"
     command:
       - bash
       - -c
