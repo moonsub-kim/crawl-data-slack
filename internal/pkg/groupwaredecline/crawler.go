@@ -43,8 +43,8 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		),
 		chromedp.Sleep(time.Second*2),
 
-		// 결재요청함
-		chromedp.Navigate(`https://gr.buzzvil.com/eap/ea/eadoc/EaDocList.do?menu_no=2002010000`),
+		// 반려함, (test용 결재요청함 2002010000)
+		chromedp.Navigate(`https://gr.buzzvil.com/eap/ea/eadoc/EaDocList.do?menu_no=2002070000`),
 
 		// 전자 결재 - 반려함: 일자 조정 버튼
 		chromedp.EvaluateAsDevTools(
@@ -105,10 +105,6 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	c.logger.Info(
-		"events",
-		zap.Any("events", events),
-	)
 
 	return events, nil
 }
