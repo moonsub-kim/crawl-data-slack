@@ -122,6 +122,7 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 		return err
 	}
 
+	logger.Info("Succeed")
 	return nil
 }
 
