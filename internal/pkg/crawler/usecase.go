@@ -17,11 +17,11 @@ type UseCase struct {
 
 // TODO rename
 func (u UseCase) Work(crawler string, job string) error {
-	restricted, err := u.isRestricted(crawler, job)
+	allowed, err := u.isAllowed(crawler, job)
 	if err != nil {
 		return err
-	} else if restricted {
-		u.logger.Info("restricted")
+	} else if !allowed {
+		u.logger.Info("not allowed to run command")
 		return nil
 	}
 
@@ -38,18 +38,38 @@ func (u UseCase) Work(crawler string, job string) error {
 	return u.notify(events)
 }
 
-func (u UseCase) isRestricted(crawler string, job string) (bool, error) {
+func (u UseCase) isAllowed(crawler string, job string) (bool, error) {
 	r, err := u.repository.GetRestriction(crawler, job)
 	if err != nil {
 		return false, err
 	}
 
 	now := time.Now()
-	if now.After(r.StartDate) && now.Before(r.EndDate) && r.HourFrom <= now.Hour() && now.Hour() < r.HourTo {
-		return true, nil
+
+	// no restriction record
+	if now.After(r.StartDate) && now.Before(r.EndDate) {
+		return false, nil
 	}
 
-	return false, nil
+	// allow cond   return
+	// true  true   true	(run command)
+	// true  false  false
+	// false true   false
+	// false false  true	(run commmand)
+	cond := r.HourFrom <= now.Hour() && now.Hour() < r.HourTo
+	if r.Allow {
+		if cond {
+			return true, nil
+		} else { // !cond
+			return false, nil
+		}
+	} else { // !r.Allow
+		if cond {
+			return false, nil
+		} else { // !cond
+			return true, nil
+		}
+	}
 }
 
 // save events and returns saved events

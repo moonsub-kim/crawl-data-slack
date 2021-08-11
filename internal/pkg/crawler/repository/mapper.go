@@ -48,6 +48,7 @@ func (m mapper) mapModelRestrictionToRestriction(r Restriction) crawler.Restrict
 		EndDate:   r.EndDate,
 		HourFrom:  r.HourFrom,
 		HourTo:    r.HourTo,
+		Allow:     r.Allow,
 	}
 }
 
@@ -59,5 +60,6 @@ func (m mapper) mapRestrictionToModelRestriction(r crawler.Restriction) Restrict
 		EndDate:   r.EndDate,
 		HourFrom:  r.HourFrom,
 		HourTo:    r.HourTo,
+		Allow:     r.Allow,
 	}
 }

@@ -11,6 +11,7 @@ type Restriction struct {
 	HourFrom  int
 	HourTo    int
 	CreatedAt time.Time `gorm:"autoCreateTime;uniqueIndex:crawler_job_created"`
+	Allow     bool
 }
 
 func (Restriction) TableName() string {

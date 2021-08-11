@@ -25,6 +25,7 @@ type Restriction struct {
 	EndDate   time.Time
 	HourFrom  int
 	HourTo    int
+	Allow     bool
 }
 
 type Notification struct {
