@@ -20,3 +20,5 @@ RUN go build -o /go/bin/crawl-data-slack ./cmd
 FROM golang:1.16.5 AS prod
 
 COPY --from=build /go/bin/crawl-data-slack /go/bin/crawl-data-slack
+
+COPY --from=build /app/wait-for-it.sh /bin/wait-for-it.sh

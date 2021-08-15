@@ -5,13 +5,13 @@ services:
     container_name: crawl-data-slack
     build:
       context: .
-      target: build
+      target: prod
     command:
       - bash
       - -c
       - |
-        sleep 1 &&
-        /go/bin/crawl-data-slack ${COMMAND}
+        /bin/wait-for-it.sh chrome:9222 -t 60 -- /go/bin/crawl-data-slack ${COMMAND}
+      # crawl groupware -job declined_payments
     environment:
       - GROUPWARE_ID=${GROUPWARE_ID}
       - GROUPWARE_PW=${GROUPWARE_PW}
