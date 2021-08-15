@@ -75,6 +75,10 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 			function crawl() {
 				var trs = document.body.querySelectorAll('div.grid-content > table > tbody > tr');
 				var records = [];
+				if (trs.length == 1) {
+					return "[]"
+				}
+
 				for (var i = 0; i < trs.length; i++) {
 					var arr = [];
 					var tds = trs[i].getElementsByTagName('td');
