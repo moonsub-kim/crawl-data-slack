@@ -76,7 +76,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 				var trs = document.body.querySelectorAll('div.grid-content > table > tbody > tr');
 				var records = [];
 				if (trs.length == 1) {
-					return "[]"
+					return "[]" 			// ignore empty search results
 				}
 
 				for (var i = 0; i < trs.length; i++) {
