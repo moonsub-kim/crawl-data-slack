@@ -5,4 +5,5 @@ type DTO struct {
 	URL        string `json:"url"`
 	CommentURL string `json:"comment_url"` // hackernews comments url
 	Title      string `json:"title"`
+	SubText    string `json:"subtext"`
 }

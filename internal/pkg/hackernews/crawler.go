@@ -32,25 +32,36 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		// 문서 파싱
 		chromedp.Evaluate(
 			`
-			function map_object(tr) {
-				var a = tr.getElementsByClassName("storylink")[0];
+			function map_object(athing, metadata) {
+				var a = athing.getElementsByClassName("storylink")[0];
+				var subtext = metadata.getElementsByClassName("subtext")[0];
+
+				// const regexHide = /(\| )?hide( \| )?/i;
+				// var txt = subtext.innerText.replace(regex, '');
+				// const regexAuthor = /(by .+ )/;
+				// var txt = txt.replace(regex, '');
+
 				return {
-					"id": tr.id,
+					"id": athing.id,
 					"url": a.href,
-					"comment_url": "https://news.ycombinator.com/item?id=" + tr.id,
+					"comment_url": "https://news.ycombinator.com/item?id=" + athing.id,
 					"title": a.innerText,
+					"subtext": subtext.innerText,
 				}
 			}
 
 			function crawl() {
-				var trs = document.body.querySelectorAll('.itemlist > tbody > tr.athing');
+				var trs = document.body.querySelectorAll('.itemlist > tbody > tr');
 				var records = [];
-				if (trs.length == 0) {
-					return "[]" 			// ignore empty search results
-				}
+				for (var i = 0; i < trs.length; i+=3) {
+					var athing = trs[i];
+					var metadata = trs[i+1];
 
-				for (var i = 0; i < trs.length; i++) {
-					records.push(map_object(trs[i]));
+					if (athing.classList.contains('athing') === false) {
+						break;
+					}
+
+					records.push(map_object(athing, metadata));
 				}
 
 				return JSON.stringify(records);
@@ -69,12 +80,12 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 
-	c.logger.Info("dto", zap.Any("dto", dtos))
 	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName())
 	if err != nil {
 		return nil, err
 	}
 
+	c.logger.Info("crawler", zap.Any("dto", dtos), zap.Any("events", events))
 	return events, nil
 }
 
