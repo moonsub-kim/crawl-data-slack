@@ -16,6 +16,7 @@ import (
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/groupwaredecline"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/hackernews"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/slackclient"
 	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
@@ -35,6 +36,10 @@ var Commands = []*cli.Command{
 					&cli.BoolFlag{Name: "job"},
 				},
 				Action: CrawlGroupWareDeclinedPayments,
+			},
+			{
+				Name:   "hackernews",
+				Action: CrawlHackerNews,
 			},
 		},
 	},
@@ -60,6 +65,67 @@ var Commands = []*cli.Command{
 			// {Name: "chrome", Action: TestChrome},
 		},
 	},
+}
+
+func CrawlHackerNews(ctx *cli.Context) error {
+	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
+	mysqlConn := os.Getenv("MYSQL_CONN")
+	chromeHost := os.Getenv("CHROME_HOST")
+
+	logger := zapLogger()
+
+	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(
+		&repository.Event{},
+		&repository.Restriction{},
+		&repository.User{},
+	)
+	if err != nil {
+		return err
+	}
+
+	url, err := getChromeURL(logger, chromeHost)
+	if err != nil {
+		return err
+	}
+	logger.Info("chrome url", zap.String("url", url))
+
+	devtoolsWSURL := flag.String("devtools-ws-url", url, "DevTools Websocket URL")
+	allocatorctx, cancel := chromedp.NewRemoteAllocator(context.Background(), *devtoolsWSURL)
+	defer cancel()
+
+	chromectx, cancel := chromedp.NewContext(
+		allocatorctx,
+		// chromedp.WithLogf(log.Printf),
+		// chromedp.WithDebugf(log.Printf),
+	)
+	defer cancel()
+
+	repository := repository.NewRepository(logger, db)
+	hackerNewsCrawler := hackernews.NewCrawler(logger, chromectx)
+	api := slack.New(slackBotToken)
+	client := slackclient.NewClient(logger, api)
+
+	usecase := crawler.NewUseCase(
+		logger,
+		repository,
+		hackerNewsCrawler,
+		client,
+		client,
+	)
+
+	err = usecase.Work(hackerNewsCrawler.GetCrawlerName(), hackerNewsCrawler.GetJobName())
+	if err != nil {
+		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
+		return err
+	}
+
+	logger.Info("Succeed")
+	return nil
 }
 
 // CrawlGroupWareDeclinedPayments crawls declied payments from groupware and notify the events

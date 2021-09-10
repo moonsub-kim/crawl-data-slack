@@ -105,6 +105,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 
+	c.logger.Info("dto", zap.Any("dto", dtos))
 	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName())
 	if err != nil {
 		return nil, err
