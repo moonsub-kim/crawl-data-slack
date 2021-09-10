@@ -3,6 +3,7 @@ package hackernews
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -15,7 +16,12 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string) ([]cr
 	for _, dto := range dtos {
 		// 292 points by geox 16 hours ago | hide | 140 comments
 		// 49 minutes ago | hide
-		m := getParams(`(?P<points>\d+)?( points)?( by .+? )?(?P<age>\d+ .+ ago) \| hide( \| )?(?P<comments>\d+)( comments)?`, dto.SubText)
+		m := getParams(`(?P<points>\d+)?( points?)?( by .+? )?(?P<age>\d+ .+ ago) \| hide( \| )?(?P<comments>\d+)( comments?)?`, dto.SubText)
+
+		// 1시간 이내 글 제외
+		if strings.Contains(m["age"], "minutes") {
+			continue
+		}
 
 		events = append(
 			events,
