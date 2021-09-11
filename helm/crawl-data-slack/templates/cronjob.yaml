@@ -1,0 +1,55 @@
+{{- range $.Values.cronJobs }}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ .jobName }}
+  labels:
+    app: {{ .jobName }}
+    component: {{ .jobName }}
+    release: {{ $.Release.Name }}
+    namespace: {{ $.namespace }}
+spec:
+  schedule: {{ .schedule }}
+  concurrencyPolicy: {{ .concurrencyPolicy }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .backoffLimit }}
+      template:
+        metadata:
+          namespace: {{ $.namespace }}
+          labels:
+            component: {{ .jobName }}
+            release: {{ $.Release.Name }}
+        spec:
+          restartPolicy: {{ .restartPolicy }}
+          shareProcessNamespace: true
+          containers:
+          - name: {{ .jobName }}
+            image: {{ $.Values.image }}:{{ $.Values.imageTag }}
+            command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              /bin/wait-for-it.sh localhost:9222 -t 60 -- /go/bin/crawl-data-slack {{ .command }}
+            env:
+            - name: CHROME_HOST
+              value: localhost:9222
+            {{- range $key, $val := .env }}
+            - name: {{ $key }}
+              value: {{ $val }}
+            {{- end }}
+          - name: sidecar-chrome
+            image: chromedp/headless-shell:stable
+            command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              /headless-shell/headless-shell --no-sandbox --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222 &
+              CHILD_PID=$!
+              sleep 5
+              (while true; do if pidof crawl-data-slack > /dev/null; then echo''; else kill $CHILD_PID; exit 0; fi; sleep 1; done)
+            ports:
+            - containerPort: 9222
+            resources:
+{{ toYaml $.Values.chromedp.resources | indent 14 }}
+{{- end }}

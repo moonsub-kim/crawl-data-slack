@@ -1,0 +1,6 @@
+name: crawl-data-slack
+description: A Helm chart for crawl-data-slack
+type: application
+apiVersion: v2
+version: 0.1.0
+icon: https://cdn0.iconfinder.com/data/icons/social-flat-rounded-rects/512/hacker_news-512.png

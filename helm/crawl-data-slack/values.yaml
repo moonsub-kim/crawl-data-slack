@@ -1,0 +1,24 @@
+
+image: gos16052/groupware-slack
+
+imageTag: latest
+
+namespace: ""
+
+cronJobs:
+- jobName: "hackernews"
+  command: "crawl hackernews"
+  schedule: "0/30 * * * *"
+  concurrencyPolicy: "Forbid"
+  backoffLimit: 0
+  restartPolicy: "Never"
+  env:
+    SLACK_BOT_TOKEN: ""
+    MYSQL_CONN: ""
+
+chromedp:
+  resources:
+    limits: {}
+    requests:
+      cpu: 1000m
+      memeory: 2Gi
