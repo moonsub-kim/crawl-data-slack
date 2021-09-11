@@ -24,11 +24,11 @@ It uses 3 apis ([conversations.list](https://api.slack.com/methods/conversations
 ## Run the crawler
 
 1. Pull the repository to run with chromedp
-2. Creata a `.env.` file and write the environments
+2. Creata a `.env` file and write the environments
 ```
 # Fill ID, PW, HOST, PORT, DATABASE, SLACK_BOT_TOKEN
 MYSQL_CONN=<ID>:<PW>@tcp(<HOST>:<PORT>)/<DATABASE>?charset=utf8&parseTime=True
 SLACK_BOT_TOKEN=<SLACK_BOT_TOKEN>
 ```
 
-3. Run with the command `make up cmd="crawl\ hackernews\ --chanenl\ <YOUR_CHANNEL>`
+3. Run with the command `make up cmd="crawl\ hackernews\ --channel\ <YOUR_CHANNEL>`
