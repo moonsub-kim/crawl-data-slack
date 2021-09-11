@@ -22,6 +22,9 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 		if strings.Contains(age, "minute") {
 			fmt.Printf("ignore recent 1h post %v\n", dto)
 			continue
+		} else if !strings.Contains(dto.SubText, "comment") || strings.Contains(dto.SubText, "discuss") {
+			fmt.Printf("ignore ad post %v\n", dto)
+			continue
 		}
 
 		comments := regexp.MustCompile(`\d+.comments?`).FindString(dto.SubText)
