@@ -85,7 +85,11 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 
-	c.logger.Info("crawler", zap.Any("dto", dtos), zap.Any("events", events))
+	c.logger.Info(
+		"crawler",
+		// zap.Any("dto", dtos),
+		zap.Any("events", events),
+	)
 	return events, nil
 }
 

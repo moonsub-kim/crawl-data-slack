@@ -19,8 +19,9 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string) ([]cr
 		// 11 points by todsacerdoti 46 minutes ago | hide | discuss
 		m := getParams(`(?P<points>\d+)?( points?)?( by .+? )?(?P<age>\d+ .+ ago) \| hide( \| )?(?P<comments>\d+)?( comments?)?( discuss)?`, dto.SubText)
 
-		// 1시간 이내 글 제외
-		if strings.Contains(m["age"], "minutes") {
+		// ignore recent 1h post
+		if strings.Contains(m["age"], "minute") {
+			fmt.Printf("ignore %v\n", dto)
 			continue
 		}
 
