@@ -40,7 +40,7 @@ var Commands = []*cli.Command{
 			{
 				Name: "hackernews",
 				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel", DefaultText: "hacker-news"},
+					&cli.StringFlag{Name: "channel"},
 				},
 				Action: CrawlHackerNews,
 			},
