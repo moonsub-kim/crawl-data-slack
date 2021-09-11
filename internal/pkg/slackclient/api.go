@@ -45,7 +45,7 @@ func (c Client) GetUsers() ([]crawler.User, error) {
 	nextCursor := ""
 	for {
 		var slackChannels []slack.Channel
-		param := slack.GetConversationsParameters{Cursor: nextCursor}
+		param := slack.GetConversationsParameters{Cursor: nextCursor, ExcludeArchived: true}
 		slackChannels, nextCursor, err = c.api.GetConversations(&param)
 		if err != nil {
 			c.logger.Error("getConversations", zap.Error(err))
