@@ -17,12 +17,16 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string) ([]cr
 		// 292 points by geox 16 hours ago | hide | 140 comments
 		// 49 minutes ago | hide
 		// 11 points by todsacerdoti 46 minutes ago | hide | discuss
-		m := getParams(`(?P<points>\d+)?( points?)?( by .+? )?(?P<age>\d+ .+ ago) \| hide( \| )?(?P<comments>\d+)?( comments?)?( discuss)?`, dto.SubText)
 
-		// ignore recent 1h post
-		if strings.Contains(m["age"], "minute") {
-			fmt.Printf("ignore %v\n", dto)
+		age := regexp.MustCompile(`\d+ [A-z]+ ago`).FindString(dto.SubText)
+		if strings.Contains(age, "minute") {
+			fmt.Printf("ignore recent 1h post %v\n", dto)
 			continue
+		}
+
+		comments := regexp.MustCompile(`\d+ comments?`).FindString(dto.SubText)
+		if comments == "" {
+			comments = "discuss"
 		}
 
 		events = append(
@@ -33,23 +37,17 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string) ([]cr
 				UserName: "hacker-news",
 				UID:      dto.ID,
 				Name:     "news",
-				Message:  fmt.Sprintf("<%s|%s>\n(%s <%s|%s comments>)\n", dto.URL, dto.Title, m["age"], dto.CommentURL, m["comments"]),
+				Message: fmt.Sprintf(
+					"<%s|%s>\n(%s, <%s|%s>)",
+					dto.URL,
+					dto.Title,
+					age,
+					dto.CommentURL,
+					comments,
+				),
 			},
 		)
 	}
 
 	return events, nil
-}
-
-func getParams(regEx, s string) (paramsMap map[string]string) {
-	var compRegEx = regexp.MustCompile(regEx)
-	match := compRegEx.FindStringSubmatch(s)
-
-	paramsMap = make(map[string]string)
-	for i, name := range compRegEx.SubexpNames() {
-		if i > 0 && i <= len(match) {
-			paramsMap[name] = match[i]
-		}
-	}
-	return paramsMap
 }
