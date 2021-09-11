@@ -1,6 +1,8 @@
 package slackclient
 
 import (
+	"time"
+
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/slack-go/slack"
 	"go.uber.org/zap"
@@ -23,14 +25,14 @@ func (c Client) Notify(n crawler.Notification) error {
 }
 
 func (c Client) GetUsers() ([]crawler.User, error) {
-	users, err := c.api.GetUsers()
+	slackUsers, err := c.api.GetUsers()
 	if err != nil {
 		c.logger.Error("getUsers", zap.Error(err))
 		return nil, err
 	}
 
 	var activeUsers []slack.User
-	for _, u := range users {
+	for _, u := range slackUsers {
 		if u.Deleted || u.IsBot || u.IsRestricted {
 			continue
 		}
@@ -38,7 +40,30 @@ func (c Client) GetUsers() ([]crawler.User, error) {
 		activeUsers = append(activeUsers, u)
 	}
 
-	return c.mapper.mapSlackUsersToUsers(activeUsers), nil
+	users := c.mapper.mapSlackUsersToUsers(activeUsers)
+
+	nextCursor := ""
+	for {
+		var slackChannels []slack.Channel
+		param := slack.GetConversationsParameters{Cursor: nextCursor}
+		slackChannels, nextCursor, err = c.api.GetConversations(&param)
+		if err != nil {
+			c.logger.Error("getConversations", zap.Error(err))
+			return nil, err
+		} else if nextCursor == "" {
+			break
+		}
+		channels := c.mapper.mapSlackChannelsToUsers(slackChannels)
+		users = append(users, channels...)
+		c.logger.Info(
+			"GetConversations",
+			zap.Any("channels", channels),
+			zap.Any("nextCursor", nextCursor),
+		)
+		time.Sleep(time.Second * 3)
+	}
+
+	return users, nil
 }
 
 func NewClient(logger *zap.Logger, client *slack.Client) *Client {

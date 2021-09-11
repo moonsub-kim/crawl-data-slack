@@ -13,6 +13,7 @@ import (
 type Crawler struct {
 	logger       *zap.Logger
 	ctx          context.Context
+	channel      string
 	eventBuilder eventBuilder
 }
 
@@ -80,7 +81,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 
-	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName())
+	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -93,9 +94,10 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return events, nil
 }
 
-func NewCrawler(logger *zap.Logger, chromectx context.Context) *Crawler {
+func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string) *Crawler {
 	return &Crawler{
-		logger: logger,
-		ctx:    chromectx,
+		logger:  logger,
+		ctx:     chromectx,
+		channel: channel,
 	}
 }

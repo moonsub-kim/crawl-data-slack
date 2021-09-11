@@ -38,7 +38,10 @@ var Commands = []*cli.Command{
 				Action: CrawlGroupWareDeclinedPayments,
 			},
 			{
-				Name:   "hackernews",
+				Name: "hackernews",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "channel", DefaultText: "hacker-news"},
+				},
 				Action: CrawlHackerNews,
 			},
 		},
@@ -67,7 +70,7 @@ var Commands = []*cli.Command{
 	},
 }
 
-func CrawlHackerNews(ctx *cli.Context) error {
+func CrawlHackerNews(c *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	mysqlConn := os.Getenv("MYSQL_CONN")
 	chromeHost := os.Getenv("CHROME_HOST")
@@ -105,8 +108,9 @@ func CrawlHackerNews(ctx *cli.Context) error {
 	)
 	defer cancel()
 
+	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
 	repository := repository.NewRepository(logger, db)
-	hackerNewsCrawler := hackernews.NewCrawler(logger, chromectx)
+	hackerNewsCrawler := hackernews.NewCrawler(logger, chromectx, c.String("channel"))
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
 

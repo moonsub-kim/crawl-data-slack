@@ -11,7 +11,7 @@ import (
 type eventBuilder struct {
 }
 
-func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string) ([]crawler.Event, error) {
+func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event
 	for _, dto := range dtos {
 		// 292 points by geox 16 hours ago | hide | 140 comments
@@ -35,7 +35,7 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string) ([]cr
 			crawler.Event{
 				Crawler:  crawlerName,
 				Job:      jobName,
-				UserName: "hacker-news",
+				UserName: channel,
 				UID:      dto.ID,
 				Name:     "news",
 				Message: fmt.Sprintf(

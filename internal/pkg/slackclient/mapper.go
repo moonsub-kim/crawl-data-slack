@@ -22,3 +22,18 @@ func (m mapper) mapSlackUsersToUsers(slackUsers []slack.User) []crawler.User {
 	}
 	return users
 }
+
+func (m mapper) mapSlackChannelsToUsers(slackChannels []slack.Channel) []crawler.User {
+	var users []crawler.User
+	for _, c := range slackChannels {
+		users = append(users, m.mapSlackChannelToUser(c))
+	}
+	return users
+}
+
+func (m mapper) mapSlackChannelToUser(c slack.Channel) crawler.User {
+	return crawler.User{
+		ID:   c.ID,
+		Name: c.Name,
+	}
+}
