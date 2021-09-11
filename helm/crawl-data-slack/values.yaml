@@ -1,5 +1,5 @@
 
-image: gos16052/groupware-slack
+image: gos16052/crawl-data-slack
 
 imageTag: latest
 
