@@ -24,7 +24,8 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string) ([]cr
 			continue
 		}
 
-		comments := regexp.MustCompile(`\d+ comments?`).FindString(dto.SubText)
+		comments := regexp.MustCompile(`\d+( |&nbsp;)comments?`).FindString(dto.SubText)
+		comments = strings.ReplaceAll(comments, "&nbsp;", " ")
 		if comments == "" {
 			comments = "discuss"
 		}
