@@ -18,7 +18,6 @@ cronJobs:
 
 chromedp:
   resources:
-    limits: {}
     requests:
       cpu: 1000m
-      memeory: 2Gi
+      memory: 2Gi
