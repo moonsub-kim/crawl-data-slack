@@ -33,6 +33,7 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 		reason, subText, filtered := b.filter(filters, dto.SubText)
 		if filtered {
 			fmt.Printf("%s %v\n", reason, dto)
+			continue
 		}
 
 		events = append(
