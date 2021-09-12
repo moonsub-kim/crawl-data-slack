@@ -75,8 +75,8 @@ func (f *pointFilter) Filter(subText string) bool {
 	} else if v, err := strconv.Atoi(point[1]); err != nil {
 		f.reason = fmt.Sprintf("Atoi error %v", err)
 		return true
-	} else if v < 20 {
-		f.reason = "ignore under less than point"
+	} else if v < 40 {
+		f.reason = "ignore less than 40 point"
 		return true
 	}
 	f.parsed = point[0]
