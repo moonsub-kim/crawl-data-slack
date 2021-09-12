@@ -44,7 +44,7 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 				UID:      dto.ID,
 				Name:     "news",
 				Message: fmt.Sprintf(
-					"<%s|%s>\n(%s|%s>)",
+					"<%s|%s>\n(<%s|%s>)",
 					dto.URL,
 					dto.Title,
 					dto.CommentURL,
