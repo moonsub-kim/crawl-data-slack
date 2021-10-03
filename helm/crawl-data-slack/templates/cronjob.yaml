@@ -1,4 +1,5 @@
 {{- range $.Values.cronJobs }}
+---
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
@@ -22,7 +23,9 @@ spec:
             release: {{ $.Release.Name }}
         spec:
           restartPolicy: {{ .restartPolicy }}
+          {{ if .chromeEnabled }}
           shareProcessNamespace: true
+          {{ end }}
           containers:
           - name: {{ .jobName }}
             image: {{ $.Values.image }}:{{ $.Values.imageTag }}
@@ -30,14 +33,17 @@ spec:
             - "/bin/sh"
             - "-c"
             - |
-              /bin/wait-for-it.sh localhost:9222 -t 60 -- /go/bin/crawl-data-slack {{ .command }}
+              {{ if .chromeEnabled }}/bin/wait-for-it.sh localhost:9222 -t 60 -- {{ end }}/go/bin/crawl-data-slack {{ .command }}
             env:
+            {{ if .chromeEnabled }}
             - name: CHROME_HOST
               value: localhost:9222
+            {{ end }}
             {{- range $key, $val := .env }}
             - name: {{ $key }}
               value: {{ $val }}
             {{- end }}
+          {{ if .chromeEnabled }}
           - name: sidecar-chrome
             image: chromedp/headless-shell:stable
             command:
@@ -52,4 +58,5 @@ spec:
             - containerPort: 9222
             resources:
 {{ toYaml $.Values.chromedp.resources | indent 14 }}
+          {{ end }}
 {{- end }}

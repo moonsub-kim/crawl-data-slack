@@ -1,4 +1,3 @@
-
 image: gos16052/crawl-data-slack
 
 imageTag: latest
@@ -12,6 +11,7 @@ cronJobs:
   concurrencyPolicy: "Forbid"
   backoffLimit: 0
   restartPolicy: "Never"
+  chromeEnabled: True
   env:
     SLACK_BOT_TOKEN: ""
     MYSQL_CONN: ""
