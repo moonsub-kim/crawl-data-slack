@@ -9,7 +9,6 @@ require (
 	github.com/slack-go/slack v0.9.4
 	github.com/urfave/cli/v2 v2.3.0
 	go.uber.org/zap v1.18.1
-	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
 	gorm.io/driver/mysql v1.1.1
 	gorm.io/gorm v1.21.12
 )
