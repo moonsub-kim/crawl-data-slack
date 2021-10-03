@@ -13,6 +13,7 @@ import (
 	"reflect"
 
 	"github.com/chromedp/chromedp"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/book"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/groupwaredecline"
@@ -52,6 +53,13 @@ var Commands = []*cli.Command{
 				},
 				Action: CrawlQuasarZoneSales,
 			},
+			{
+				Name: "book",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "channel"},
+				},
+				Action: CrawlKyobo,
+			},
 		},
 	},
 	{
@@ -76,6 +84,50 @@ var Commands = []*cli.Command{
 			// {Name: "chrome", Action: TestChrome},
 		},
 	},
+}
+
+func CrawlKyobo(c *cli.Context) error {
+	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
+	mysqlConn := os.Getenv("MYSQL_CONN")
+
+	logger := zapLogger()
+
+	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(
+		&repository.Event{},
+		&repository.Restriction{},
+		&repository.User{},
+	)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
+	repository := repository.NewRepository(logger, db)
+	bookCrawler := book.NewCrawler(logger, c.String("channel"))
+	api := slack.New(slackBotToken)
+	client := slackclient.NewClient(logger, api)
+
+	usecase := crawler.NewUseCase(
+		logger,
+		repository,
+		bookCrawler,
+		client,
+		client,
+	)
+
+	err = usecase.Work(bookCrawler.GetCrawlerName(), bookCrawler.GetJobName())
+	if err != nil {
+		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
+		return err
+	}
+
+	logger.Info("Succeed")
+	return nil
 }
 
 func CrawlQuasarZoneSales(c *cli.Context) error {
