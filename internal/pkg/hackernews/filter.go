@@ -63,10 +63,9 @@ func (f *ageFilter) Filter(subText string) bool {
 	return false
 }
 
-const POINT_THRESHOLD int = 100
-
 type pointFilter struct {
 	filter
+	threshold int
 }
 
 func (f *pointFilter) Filter(subText string) bool {
@@ -77,7 +76,7 @@ func (f *pointFilter) Filter(subText string) bool {
 	} else if v, err := strconv.Atoi(point[1]); err != nil {
 		f.reason = fmt.Sprintf("Atoi error %v", err)
 		return true
-	} else if v < POINT_THRESHOLD {
+	} else if v < f.threshold {
 		f.reason = "ignore less than 40 point"
 		return true
 	}

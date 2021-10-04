@@ -43,6 +43,7 @@ var Commands = []*cli.Command{
 				Name: "hackernews",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "channel"},
+					&cli.IntFlag{Name: "point_threshold"},
 				},
 				Action: CrawlHackerNews,
 			},
@@ -196,7 +197,7 @@ func CrawlHackerNews(c *cli.Context) error {
 
 	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
 	repository := repository.NewRepository(logger, db)
-	hackerNewsCrawler := hackernews.NewCrawler(logger, c.String("channel"))
+	hackerNewsCrawler := hackernews.NewCrawler(logger, c.String("channel"), c.Int("point_threshold"))
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
 

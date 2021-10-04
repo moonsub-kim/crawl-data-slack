@@ -12,6 +12,7 @@ type Crawler struct {
 	logger       *zap.Logger
 	channel      string
 	eventBuilder eventBuilder
+	filters      []Filter
 }
 
 func (c Crawler) GetCrawlerName() string { return "hacker-news" }
@@ -47,7 +48,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		})
 	}
 
-	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
+	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel, c.filters)
 	if err != nil {
 		return nil, err
 	}
@@ -60,9 +61,15 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return events, nil
 }
 
-func NewCrawler(logger *zap.Logger, channel string) *Crawler {
+func NewCrawler(logger *zap.Logger, channel string, pointThreshold int) *Crawler {
 	return &Crawler{
 		logger:  logger,
 		channel: channel,
+		filters: []Filter{
+			&adFilter{},
+			&ageFilter{},
+			&pointFilter{threshold: pointThreshold},
+			&commentFilter{},
+		},
 	}
 }

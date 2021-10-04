@@ -22,9 +22,8 @@ func (b eventBuilder) filter(filters []Filter, subText string) (string, string, 
 	return "", strings.TrimSpace(parsed), false
 }
 
-func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
+func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string, filters []Filter) ([]crawler.Event, error) {
 	var events []crawler.Event
-	filters := []Filter{&adFilter{}, &ageFilter{}, &pointFilter{}, &commentFilter{}}
 
 	for _, dto := range dtos {
 		// 292 points by geox 16 hours ago | hide | 140 comments
