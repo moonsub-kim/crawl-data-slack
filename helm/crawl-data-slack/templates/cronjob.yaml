@@ -33,7 +33,7 @@ spec:
             - "/bin/sh"
             - "-c"
             - |
-              {{ if .chromeEnabled }}/bin/wait-for-it.sh localhost:9222 -t 60 -- {{ end }}/go/bin/crawl-data-slack {{ .command }}
+              {{ if .chromeEnabled }}/bin/wait-for-it.sh localhost:9222 -t 60 -- {{ end }} {{ .command }}
             env:
             {{ if .chromeEnabled }}
             - name: CHROME_HOST

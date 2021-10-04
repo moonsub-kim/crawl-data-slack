@@ -6,7 +6,7 @@ namespace: ""
 
 cronJobs:
 - jobName: "hackernews"
-  command: "crawl hackernews"
+  command: "/go/bin/crawl-data-slack crawl hackernews --channel hacker-news --point_threshold 100"
   schedule: "0/30 * * * *"
   concurrencyPolicy: "Forbid"
   backoffLimit: 0
