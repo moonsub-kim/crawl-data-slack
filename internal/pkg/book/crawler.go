@@ -19,14 +19,6 @@ func (c Crawler) GetCrawlerName() string { return "kyobo" }
 func (c Crawler) GetJobName() string     { return "apple" }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
-	// var jsonBody string
-	// var dtos []DTO
-
-	c.logger.Info(
-		"start",
-		zap.Any("channel", c.channel),
-	)
-
 	res, err := soup.Get(`https://search.kyobobook.co.kr/web/search?vPstrKeyWord=%25EC%2595%25A0%25ED%2594%258C&searchPcondition=1&searchPubNm=%EC%95%A0%ED%94%8C&searchCategory=%EA%B8%B0%ED%94%84%ED%8A%B8@GIFT&collName=GIFT&from_CollName=%EA%B8%B0%ED%94%84%ED%8A%B8@GIFT&searchOrder=5&vPstrTab=PRODUCT&from_coll=GIFT&currentPage=1&orderClick=LIe`)
 	if err != nil {
 		return nil, err
