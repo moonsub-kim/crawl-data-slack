@@ -24,13 +24,10 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 
 	doc := soup.HTMLParse(res)
-	lis := doc.Find("div", "class", "Box").Find("ul").FindAll("li")
+	lis := doc.Find("div", "class", "org-repos").Find("div", "class", "Box").Find("ul").FindAll("li")
 	var dtos []DTO
 	for _, li := range lis {
-		a := li.Find("div", "class", "public").
-			Find("div", "class", "flex-justify-between").
-			Find("div", "class", "flex-auto").
-			Find("a", "class", "d-inline-block")
+		a := li.Find("a", "class", "d-inline-block")
 		name := a.Text()
 		url := "https://github.com" + a.Attrs()["href"]
 
