@@ -177,7 +177,6 @@ func CrawlQuasarZoneSales(c *cli.Context) error {
 func CrawlHackerNews(c *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	mysqlConn := os.Getenv("MYSQL_CONN")
-	chromeHost := os.Getenv("CHROME_HOST")
 
 	logger := zapLogger()
 
@@ -195,26 +194,9 @@ func CrawlHackerNews(c *cli.Context) error {
 		return err
 	}
 
-	url, err := getChromeURL(logger, chromeHost)
-	if err != nil {
-		return err
-	}
-	logger.Info("chrome url", zap.String("url", url))
-
-	devtoolsWSURL := flag.String("devtools-ws-url", url, "DevTools Websocket URL")
-	allocatorctx, cancel := chromedp.NewRemoteAllocator(context.Background(), *devtoolsWSURL)
-	defer cancel()
-
-	chromectx, cancel := chromedp.NewContext(
-		allocatorctx,
-		// chromedp.WithLogf(log.Printf),
-		// chromedp.WithDebugf(log.Printf),
-	)
-	defer cancel()
-
 	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
 	repository := repository.NewRepository(logger, db)
-	hackerNewsCrawler := hackernews.NewCrawler(logger, chromectx, c.String("channel"))
+	hackerNewsCrawler := hackernews.NewCrawler(logger, c.String("channel"))
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
 

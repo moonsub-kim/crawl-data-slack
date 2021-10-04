@@ -19,14 +19,7 @@ func (c Crawler) GetCrawlerName() string { return "quasarzone" }
 func (c Crawler) GetJobName() string     { return "sale-pc" }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
-	// var jsonBody string
-	// var dtos []DTO
-
-	c.logger.Info(
-		"start",
-		zap.Any("channel", c.channel),
-	)
-
+	var dtos []DTO
 	res, err := soup.Get("https://quasarzone.com/bbs/qb_saleinfo")
 	if err != nil {
 		return nil, err
@@ -37,7 +30,6 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 
 	doc := soup.HTMLParse(res)
 	contents := doc.FindAll("div", "class", "market-info-list-cont")
-	var dtos []DTO
 	for _, content := range contents {
 		div_market_info_sub_ps := content.Find("div", "class", "market-info-sub").FindAll("p")
 		p_tit := content.Find("p", "class", "tit")
