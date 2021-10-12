@@ -32,8 +32,8 @@ type statusFilter struct {
 }
 
 func (f *statusFilter) Filter(dto DTO) bool {
-	if dto.Status != "진행중" {
-		f.reason = fmt.Sprintf("진행중 != (%s)", dto.Status)
+	if dto.Status == "종료" {
+		f.reason = fmt.Sprintf("종료 == (%s)", dto.Status)
 		return true
 	}
 	return false

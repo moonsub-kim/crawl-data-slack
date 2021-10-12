@@ -37,11 +37,15 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 
 		id := strings.TrimSpace(athing.Attrs()["id"])
 		a := athing.Find("a", "class", "storylink")
+		href := strings.TrimSpace(a.Attrs()["href"])
+		if strings.HasPrefix(href, "item?id=") {
+			href = "https://news.ycombinator.com/" + href
+		}
 		subtext := metdata.Find("td", "class", "subtext")
 
 		dtos = append(dtos, DTO{
 			ID:         id,
-			URL:        strings.TrimSpace(a.Attrs()["href"]),
+			URL:        href,
 			CommentURL: "https://news.ycombinator.com/item?id=" + id,
 			Title:      strings.TrimSpace(a.Text()),
 			SubText:    strings.TrimSpace(subtext.FullText()),
