@@ -9,3 +9,7 @@ type DTO struct {
 	PriceInfo string `json:"price_info"`
 	Date      string `json:"date"`
 }
+
+func (d DTO) isEmpty() bool {
+	return d == DTO{}
+}
