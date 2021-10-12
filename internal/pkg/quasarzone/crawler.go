@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var regexID *regexp.Regexp = regexp.MustCompile(`\d+$`)
+var regexID *regexp.Regexp = regexp.MustCompile(`views/\d+`)
 var regexPrice *regexp.Regexp = regexp.MustCompile(`^.+? 가격 +(.+)`)
 
 type Crawler struct {
@@ -71,7 +71,7 @@ func (c Crawler) crawlEntry(content soup.Root) DTO {
 	}
 
 	return DTO{
-		ID:        strings.TrimSpace(regexID.FindString(url)),
+		ID:        strings.TrimSpace(regexID.FindString(url)[6:]),
 		Status:    strings.TrimSpace(p_tit.Find("span", "class", "label").Text()),
 		Name:      strings.TrimSpace(p_tit.Find("a", "class", "subject-link").Find("span", "class", "ellipsis-with-reply-cnt").Text()),
 		URL:       strings.TrimSpace(url),
