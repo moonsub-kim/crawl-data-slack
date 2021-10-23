@@ -36,7 +36,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		}
 
 		id := strings.TrimSpace(athing.Attrs()["id"])
-		a := athing.Find("a", "class", "storylink")
+		a := athing.Find("a", "class", "titlelink")
 		href := strings.TrimSpace(a.Attrs()["href"])
 		if strings.HasPrefix(href, "item?id=") {
 			href = "https://news.ycombinator.com/" + href
