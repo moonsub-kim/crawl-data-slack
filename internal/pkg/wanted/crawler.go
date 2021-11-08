@@ -18,8 +18,8 @@ type Crawler struct {
 	query        string
 }
 
-func (c Crawler) GetCrawlerName() string { return "quasarzone" }
-func (c Crawler) GetJobName() string     { return "sale-pc" }
+func (c Crawler) GetCrawlerName() string { return "wanted" }
+func (c Crawler) GetJobName() string     { return "open-position" }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
 	url := fmt.Sprintf(

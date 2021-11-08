@@ -15,6 +15,7 @@ type Client struct {
 }
 
 func (c Client) Notify(n crawler.Notification) error {
+	time.Sleep(time.Second)
 	_, _, err := c.api.PostMessage(n.User.ID, slack.MsgOptionText(n.Event.Message, false))
 	c.logger.Info(
 		"notify",
