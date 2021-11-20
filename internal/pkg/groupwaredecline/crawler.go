@@ -105,6 +105,11 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 
+	if len(dtos) == 1 && dtos[0].isEmpty() {
+		c.logger.Warn("no data parsed")
+		return []crawler.Event{}, nil
+	}
+
 	c.logger.Info("dto", zap.Any("dto", dtos))
 	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName())
 	if err != nil {
