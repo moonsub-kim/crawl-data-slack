@@ -1,33 +1,17 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
-	"reflect"
 
-	"github.com/chromedp/chromedp"
-	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/book"
-	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
-	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
-	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/gitpublic"
-	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/groupwaredecline"
-	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/hackernews"
-	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/quasarzone"
-	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/slackclient"
-	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/wanted"
-	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 var Commands = []*cli.Command{
@@ -61,7 +45,7 @@ var Commands = []*cli.Command{
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "channel"},
 				},
-				Action: CrawlKyobo,
+				Action: CrawlBook,
 			},
 			{
 				Name: "gitpublic",
@@ -77,6 +61,14 @@ var Commands = []*cli.Command{
 					&cli.StringFlag{Name: "query"},
 				},
 				Action: CrawlWanted,
+			},
+			{
+				Name: "eomisae",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "channel"},
+					&cli.StringFlag{Name: "target"},
+				},
+				Action: CrawlEomisae,
 			},
 		},
 	},
@@ -102,290 +94,6 @@ var Commands = []*cli.Command{
 			// {Name: "chrome", Action: TestChrome},
 		},
 	},
-}
-
-func CrawlGitPublic(c *cli.Context) error {
-	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
-	mysqlConn := os.Getenv("MYSQL_CONN")
-
-	logger := zapLogger()
-
-	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(
-		&repository.Event{},
-		&repository.Restriction{},
-		&repository.User{},
-	)
-	if err != nil {
-		return err
-	}
-
-	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
-	repository := repository.NewRepository(logger, db)
-	gitPublicCrawler := gitpublic.NewCrawler(logger, c.String("channel"))
-	api := slack.New(slackBotToken)
-	client := slackclient.NewClient(logger, api)
-
-	usecase := crawler.NewUseCase(
-		logger,
-		repository,
-		gitPublicCrawler,
-		client,
-		client,
-	)
-
-	err = usecase.Work(gitPublicCrawler.GetCrawlerName(), gitPublicCrawler.GetJobName())
-	if err != nil {
-		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
-		return err
-	}
-
-	logger.Info("Succeed")
-	return nil
-}
-
-func CrawlKyobo(c *cli.Context) error {
-	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
-	mysqlConn := os.Getenv("MYSQL_CONN")
-
-	logger := zapLogger()
-
-	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(
-		&repository.Event{},
-		&repository.Restriction{},
-		&repository.User{},
-	)
-	if err != nil {
-		return err
-	}
-
-	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
-	repository := repository.NewRepository(logger, db)
-	bookCrawler := book.NewCrawler(logger, c.String("channel"))
-	api := slack.New(slackBotToken)
-	client := slackclient.NewClient(logger, api)
-
-	usecase := crawler.NewUseCase(
-		logger,
-		repository,
-		bookCrawler,
-		client,
-		client,
-	)
-
-	err = usecase.Work(bookCrawler.GetCrawlerName(), bookCrawler.GetJobName())
-	if err != nil {
-		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
-		return err
-	}
-
-	logger.Info("Succeed")
-	return nil
-}
-
-func CrawlQuasarZoneSales(c *cli.Context) error {
-	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
-	mysqlConn := os.Getenv("MYSQL_CONN")
-
-	logger := zapLogger()
-
-	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(
-		&repository.Event{},
-		&repository.Restriction{},
-		&repository.User{},
-	)
-	if err != nil {
-		return err
-	}
-
-	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
-	repository := repository.NewRepository(logger, db)
-	quasarZoneCrawler := quasarzone.NewCrawler(logger, c.String("channel"))
-	api := slack.New(slackBotToken)
-	client := slackclient.NewClient(logger, api)
-
-	usecase := crawler.NewUseCase(
-		logger,
-		repository,
-		quasarZoneCrawler,
-		client,
-		client,
-	)
-
-	err = usecase.Work(quasarZoneCrawler.GetCrawlerName(), quasarZoneCrawler.GetJobName())
-	if err != nil {
-		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
-		return err
-	}
-
-	logger.Info("Succeed")
-	return nil
-}
-
-func CrawlWanted(c *cli.Context) error {
-	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
-	mysqlConn := os.Getenv("MYSQL_CONN")
-
-	logger := zapLogger()
-
-	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(
-		&repository.Event{},
-		&repository.Restriction{},
-		&repository.User{},
-	)
-	if err != nil {
-		return err
-	}
-
-	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
-	repository := repository.NewRepository(logger, db)
-	quasarZoneCrawler := wanted.NewCrawler(logger, c.String("channel"), c.String("query"))
-	api := slack.New(slackBotToken)
-	client := slackclient.NewClient(logger, api)
-
-	usecase := crawler.NewUseCase(
-		logger,
-		repository,
-		quasarZoneCrawler,
-		client,
-		client,
-	)
-
-	err = usecase.Work(quasarZoneCrawler.GetCrawlerName(), quasarZoneCrawler.GetJobName())
-	if err != nil {
-		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
-		return err
-	}
-
-	logger.Info("Succeed")
-	return nil
-}
-
-func CrawlHackerNews(c *cli.Context) error {
-	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
-	mysqlConn := os.Getenv("MYSQL_CONN")
-
-	logger := zapLogger()
-
-	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(
-		&repository.Event{},
-		&repository.Restriction{},
-		&repository.User{},
-	)
-	if err != nil {
-		return err
-	}
-
-	logger.Info("hackernews slack channel", zap.Any("channel", c.String("channel")))
-	repository := repository.NewRepository(logger, db)
-	hackerNewsCrawler := hackernews.NewCrawler(logger, c.String("channel"), c.Int("point_threshold"))
-	api := slack.New(slackBotToken)
-	client := slackclient.NewClient(logger, api)
-
-	usecase := crawler.NewUseCase(
-		logger,
-		repository,
-		hackerNewsCrawler,
-		client,
-		client,
-	)
-
-	err = usecase.Work(hackerNewsCrawler.GetCrawlerName(), hackerNewsCrawler.GetJobName())
-	if err != nil {
-		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
-		return err
-	}
-
-	logger.Info("Succeed")
-	return nil
-}
-
-// CrawlGroupWareDeclinedPayments crawls declied payments from groupware and notify the events
-func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
-	groupWareID := os.Getenv("GROUPWARE_ID")
-	groupWarePW := os.Getenv("GROUPWARE_PW")
-	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
-	mysqlConn := os.Getenv("MYSQL_CONN")
-	chromeHost := os.Getenv("CHROME_HOST")
-
-	logger := zapLogger()
-
-	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(
-		&repository.Event{},
-		&repository.Restriction{},
-		&repository.User{},
-	)
-	if err != nil {
-		return err
-	}
-
-	url, err := getChromeURL(logger, chromeHost)
-	if err != nil {
-		return err
-	}
-	logger.Info("chrome url", zap.String("url", url))
-
-	devtoolsWSURL := flag.String("devtools-ws-url", url, "DevTools Websocket URL")
-	allocatorctx, cancel := chromedp.NewRemoteAllocator(context.Background(), *devtoolsWSURL)
-	defer cancel()
-
-	chromectx, cancel := chromedp.NewContext(
-		allocatorctx,
-		// chromedp.WithLogf(log.Printf),
-		// chromedp.WithDebugf(log.Printf),
-	)
-	defer cancel()
-
-	repository := repository.NewRepository(logger, db)
-	groupwareCrawler := groupwaredecline.NewCrawler(logger, chromectx, groupWareID, groupWarePW)
-	api := slack.New(slackBotToken)
-	client := slackclient.NewClient(logger, api)
-
-	usecase := crawler.NewUseCase(
-		logger,
-		repository,
-		groupwareCrawler,
-		client,
-		client,
-	)
-
-	err = usecase.Work(groupwareCrawler.GetCrawlerName(), groupwareCrawler.GetJobName())
-	if err != nil {
-		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
-		return err
-	}
-
-	logger.Info("Succeed")
-	return nil
 }
 
 // AddRestriction adds a restriction
