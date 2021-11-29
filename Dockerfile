@@ -12,7 +12,8 @@ COPY go.sum .
 RUN go mod download
 
 # Copy the local package files to the container's workspace.
-COPY . .
+COPY ./internal ./internal/
+COPY ./cmd ./cmd/
 
 # Build the outyet command inside the container.
 RUN go build -o /go/bin/crawl-data-slack ./cmd
@@ -21,4 +22,6 @@ FROM golang:1.17.1 AS prod
 
 COPY --from=build /go/bin/crawl-data-slack /go/bin/crawl-data-slack
 
-COPY --from=build /app/wait-for-it.sh /bin/wait-for-it.sh
+COPY ./wait-for-it.sh /bin/
+
+COPY . .

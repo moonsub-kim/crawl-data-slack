@@ -22,6 +22,7 @@ var Commands = []*cli.Command{
 				Name: "groupware",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{Name: "job"},
+					&cli.StringFlag{Name: "masters"},
 				},
 				Action: CrawlGroupWareDeclinedPayments,
 			},

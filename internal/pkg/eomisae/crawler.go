@@ -22,6 +22,7 @@ type Crawler struct {
 	pw      string
 }
 
+const LOGOUT_URL string = "https://eomisae.co.kr/index.php?mid=HO&act=dispMemberLogout"
 const LOGIN_URL string = "https://eomisae.co.kr/index.php?act=dispMemberLoginForm"
 
 func (c Crawler) GetCrawlerName() string { return "eomisae" }
@@ -37,13 +38,12 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 
 		// 로그인페이지: 로그인
 		chromedp.Navigate(LOGIN_URL),
+		chromedp.Sleep(time.Second*1),
 		chromedp.EvaluateAsDevTools(
 			fmt.Sprintf(
-				`
-				document.getElementById('uid').value = '%s';
+				`document.getElementById('uid').value = '%s';
 				document.getElementById('upw').value = '%s';
-				document.getElementsByClassName('submit')[0].click();
-				`,
+				document.getElementsByClassName('submit')[0].click();`,
 				c.id,
 				c.pw,
 			),
@@ -51,50 +51,66 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		),
 		chromedp.Sleep(time.Second*2),
 
-		// go to url
+		// // go to url
 		chromedp.Navigate(c.target.url),
 		chromedp.EvaluateAsDevTools(
 			`
-			l = document.querySelectorAll('div.card_el > a.pjax');
-			var links = [];
-			for (var i = 0; i < l.length; i++) {
-				links.push(l[i].href)
+			function get_links() {
+				l = document.querySelectorAll('div.card_el > a.pjax');
+				var links = [];
+				for (var i = 0; i < l.length; i++) {
+					links.push(l[i].href)
+				}
+				return JSON.stringify(links)
 			}
-			return JSON.stringify(records)
+			get_links();
 			`,
 			&body,
 		),
 	)
+	// ioutil.WriteFile("/app/data/out.png", buf, 0644)
 	if err != nil {
+		c.logger.Error("run error", zap.Error(err))
 		return nil, err
 	}
 
+	c.logger.Info("login", zap.Any("body", body))
 	err = json.Unmarshal([]byte(body), &links)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, l := range links {
-		var dto DTO
-		err := chromedp.Run(
-			c.ctx,
-
-			// link page
+	bodies := make([]string, len(links))
+	var actions []chromedp.Action
+	for i, l := range links {
+		actions = append(
+			actions,
 			chromedp.Navigate(l),
 			chromedp.Sleep(time.Second*2),
 			chromedp.EvaluateAsDevTools(
 				c.target.script,
-				&dto,
+				&bodies[i],
 			),
 		)
+	}
+
+	err = chromedp.Run(
+		c.ctx,
+		actions...,
+	)
+	if err != nil {
+		c.logger.Error(
+			"failed to run crawler",
+			zap.Error(err),
+		)
+		return nil, err
+	}
+
+	for _, body := range bodies {
+		var dto DTO
+		err = json.Unmarshal([]byte(body), &dto)
 		if err != nil {
-			c.logger.Error(
-				"failed to run crawler",
-				zap.Error(err),
-				zap.Any("link", l),
-				zap.Any("target", c.target.name),
-			)
-			continue
+			return nil, err
 		}
 		dtos = append(dtos, dto)
 	}
@@ -110,6 +126,10 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 
 	return events, nil
+}
+
+func (c *Crawler) actionFunc(ctx *chromedp.Context) {
+
 }
 
 func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string, target string, id string, pw string) (*Crawler, error) {

@@ -15,9 +15,12 @@ services:
     environment:
       - GROUPWARE_ID=${GROUPWARE_ID}
       - GROUPWARE_PW=${GROUPWARE_PW}
+      - EOMISAE_ID=${EOMISAE_ID}
+      - EOMISAE_PW=${EOMISAE_PW}
       - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
-      - MYSQL_CONN=root@tcp(db:3306)/crawler?parseTime=true&charset=utf8
+      - MYSQL_CONN=${MYSQL_CONN:-"root@tcp(db:3306)/crawler?parseTime=true&charset=utf8"}
       - CHROME_HOST=chrome:9222
+      # - CHROME_LOG_LEVEL=DEBUG
     volumes:
       - ./data/:/app/data/
     depends_on:

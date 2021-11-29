@@ -17,6 +17,7 @@ type Crawler struct {
 	eventBuilder eventBuilder
 	id           string
 	pw           string
+	masters      []string
 }
 
 func (c Crawler) GetCrawlerName() string { return "groupware" }
@@ -111,7 +112,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 
 	c.logger.Info("dto", zap.Any("dto", dtos))
-	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName())
+	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.masters)
 	if err != nil {
 		return nil, err
 	}
@@ -119,11 +120,12 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return events, nil
 }
 
-func NewCrawler(logger *zap.Logger, chromectx context.Context, id string, pw string) *Crawler {
+func NewCrawler(logger *zap.Logger, chromectx context.Context, id string, pw string, masters []string) *Crawler {
 	return &Crawler{
-		logger: logger,
-		ctx:    chromectx,
-		id:     id,
-		pw:     pw,
+		logger:  logger,
+		ctx:     chromectx,
+		id:      id,
+		pw:      pw,
+		masters: masters,
 	}
 }

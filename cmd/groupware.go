@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 	"reflect"
+	"strings"
 
 	"github.com/chromedp/chromedp"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
@@ -59,8 +60,14 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 	)
 	defer cancel()
 
+	var masters []string
+	if ctx.String("masters") != "" {
+		masters = strings.Split(ctx.String("masters"), ",")
+		logger.Info("masters", zap.Any("masters", masters))
+	}
+
 	repository := repository.NewRepository(logger, db)
-	groupwareCrawler := groupwaredecline.NewCrawler(logger, chromectx, groupWareID, groupWarePW)
+	groupwareCrawler := groupwaredecline.NewCrawler(logger, chromectx, groupWareID, groupWarePW, masters)
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
 

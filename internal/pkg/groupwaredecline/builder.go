@@ -11,7 +11,7 @@ import (
 type eventBuilder struct {
 }
 
-func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string) ([]crawler.Event, error) {
+func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, masters []string) ([]crawler.Event, error) {
 	var events []crawler.Event
 	for _, dto := range dtos {
 		drafterName, err := b.parseDrafter(dto.Drafter)
@@ -43,6 +43,17 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string) ([]cr
 				Message:  fmt.Sprintf("%s 에게 결재(`%s`) 반려 알림이 전달되었습니다.", drafterName, dto.DocName),
 			},
 		)
+
+		for _, master := range masters {
+			events = append(events, crawler.Event{
+				Crawler:  crawlerName,
+				Job:      jobName,
+				UserName: master,
+				UID:      dto.UID,
+				Name:     "notified_declined_master",
+				Message:  fmt.Sprintf("%s 가 %s 에게 `%s`를 반려 처리 하였습니다.", reviewerName, drafterName, dto.DocName),
+			})
+		}
 	}
 
 	return events, nil
