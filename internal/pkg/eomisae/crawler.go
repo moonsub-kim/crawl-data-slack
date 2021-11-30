@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/device"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"go.uber.org/zap"
 )
@@ -35,6 +36,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 
 	err := chromedp.Run(
 		c.ctx,
+		chromedp.Emulate(device.IPhone11),
 
 		// 로그인페이지: 로그인
 		chromedp.Navigate(LOGIN_URL),
@@ -56,7 +58,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		chromedp.EvaluateAsDevTools(
 			`
 			function get_links() {
-				l = document.querySelectorAll('div.card_el > a.pjax');
+				l = document.querySelectorAll('#bd_lst > .lst_nm > a');
 				var links = [];
 				for (var i = 0; i < l.length; i++) {
 					links.push(l[i].href)
@@ -81,7 +83,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 
 	bodies := make([]string, len(links))
-	var actions []chromedp.Action
+	actions := []chromedp.Action{chromedp.Emulate(device.IPhone11)}
 	for i, l := range links {
 		actions = append(
 			actions,
@@ -126,10 +128,6 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 
 	return events, nil
-}
-
-func (c *Crawler) actionFunc(ctx *chromedp.Context) {
-
 }
 
 func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string, target string, id string, pw string) (*Crawler, error) {
