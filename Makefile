@@ -24,8 +24,8 @@ shell:
 
 docker-upload:
 	@docker build .
-	@docker tag crawl-data-slack_app gos16052/crawl-data-slack
-	@docker push gos16052/crawl-data-slack
+	@docker tag crawl-data-slack_app gos16052/crawl-data-slack:$(version)
+	@docker push gos16052/crawl-data-slack:$(version)
 
 helm-upgrade: docker-upload
 	@helm upgrade grslack helm/crawl-data-slack -f helm/values/values.yaml

@@ -30,6 +30,7 @@ services:
   chrome:
     container_name: chrome
     image: chromedp/headless-shell:stable
+    command: "--disable-dev-shm-usage"
     ports:
       - "9222:9222"
 

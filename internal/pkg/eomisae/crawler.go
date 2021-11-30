@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/anaskhan96/soup"
 	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/device"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
@@ -29,80 +30,81 @@ const LOGIN_URL string = "https://eomisae.co.kr/index.php?act=dispMemberLoginFor
 func (c Crawler) GetCrawlerName() string { return "eomisae" }
 func (c Crawler) GetJobName() string     { return c.target.name }
 
-func (c Crawler) Crawl() ([]crawler.Event, error) {
-	var body string
+func (c Crawler) getLinks() ([]string, error) {
+	res, err := soup.Get(c.target.url)
+	if err != nil {
+		return nil, err
+	}
+	doc := soup.HTMLParse(res)
+
 	var links []string
+	contents := doc.Find("div", "class", "bd_card").FindAll("a", "class", "hx")
+	for _, content := range contents {
+		links = append(links, content.Attrs()["href"])
+	}
+
+	return links, nil
+}
+
+func (c Crawler) Crawl() ([]crawler.Event, error) {
 	var dtos []DTO
 
-	err := chromedp.Run(
-		c.ctx,
-		chromedp.Emulate(device.IPhone11),
+	links, err := c.getLinks()
+	if err != nil {
+		c.logger.Error(
+			"failed to get links",
+			zap.Error(err),
+		)
+		return nil, err
+	} else if len(links) == 0 {
+		c.logger.Info("no links to parse")
+		return []crawler.Event{}, nil
+	}
+	c.logger.Info(
+		"links",
+		zap.Any("links", links),
+	)
+
+	// create actions
+	bodies := make([]string, len(links))
+	linkActions := []chromedp.Action{chromedp.Emulate(device.IPhone11)}
+	for i, l := range links {
+		linkActions = append(
+			linkActions,
+			c.createLinkActions(l, &bodies[i])...,
+		)
+	}
+
+	actions := []chromedp.Action{
+		chromedp.Emulate(device.IPhone11), // mobile emulation
 
 		// 로그인페이지: 로그인
 		chromedp.Navigate(LOGIN_URL),
-		chromedp.Sleep(time.Second*1),
+		chromedp.Sleep(time.Second * 1),
 		chromedp.EvaluateAsDevTools(
 			fmt.Sprintf(
 				`document.getElementById('uid').value = '%s';
-				document.getElementById('upw').value = '%s';
-				document.getElementsByClassName('submit')[0].click();`,
+					document.getElementById('upw').value = '%s';
+					document.getElementsByClassName('submit')[0].click();`,
 				c.id,
 				c.pw,
 			),
 			nil,
 		),
-		chromedp.Sleep(time.Second*2),
-
-		// // go to url
-		chromedp.Navigate(c.target.url),
-		chromedp.EvaluateAsDevTools(
-			`
-			function get_links() {
-				l = document.querySelectorAll('#bd_lst > .lst_nm > a');
-				var links = [];
-				for (var i = 0; i < l.length; i++) {
-					links.push(l[i].href)
-				}
-				return JSON.stringify(links)
-			}
-			get_links();
-			`,
-			&body,
-		),
-	)
-	// ioutil.WriteFile("/app/data/out.png", buf, 0644)
-	if err != nil {
-		c.logger.Error("run error", zap.Error(err))
-		return nil, err
+		chromedp.Sleep(time.Second * 1),
 	}
-
-	c.logger.Info("login", zap.Any("body", body))
-	err = json.Unmarshal([]byte(body), &links)
-	if err != nil {
-		return nil, err
-	}
-
-	bodies := make([]string, len(links))
-	actions := []chromedp.Action{chromedp.Emulate(device.IPhone11)}
-	for i, l := range links {
-		actions = append(
-			actions,
-			c.createActions(l, &bodies[i])...,
-		)
-	}
+	actions = append(actions, linkActions...)
 
 	err = chromedp.Run(
 		c.ctx,
 		actions...,
 	)
 	if err != nil {
-		c.logger.Error(
-			"failed to run crawler",
-			zap.Error(err),
-		)
+		c.logger.Error("run error", zap.Error(err))
 		return nil, err
 	}
 
+	// unmarshalling
 	for _, body := range bodies {
 		var dto DTO
 		err = json.Unmarshal([]byte(body), &dto)
@@ -125,7 +127,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return events, nil
 }
 
-func (c Crawler) createActions(link string, body *string) []chromedp.Action {
+func (c Crawler) createLinkActions(link string, body *string) []chromedp.Action {
 	return []chromedp.Action{
 		chromedp.ActionFunc(func(context.Context) error {
 			c.logger.Info(
@@ -135,7 +137,7 @@ func (c Crawler) createActions(link string, body *string) []chromedp.Action {
 			return nil
 		}),
 		chromedp.Navigate(link),
-		chromedp.Sleep(time.Second * 2),
+		chromedp.Sleep(time.Second * 1),
 		chromedp.EvaluateAsDevTools(
 			c.target.script,
 			body,
