@@ -13,6 +13,7 @@ var targets map[string]target = map[string]target{
 		script: `
 		function parse_dto() {
 			return JSON.stringify({
+				'post': document.URL,
 				'name': document.querySelector('h2 > a.pjax').innerText,
 				'url': document.querySelector('td.extra_url > a').href,
 			});

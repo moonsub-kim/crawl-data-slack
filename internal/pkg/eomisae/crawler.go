@@ -87,12 +87,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	for i, l := range links {
 		actions = append(
 			actions,
-			chromedp.Navigate(l),
-			chromedp.Sleep(time.Second*2),
-			chromedp.EvaluateAsDevTools(
-				c.target.script,
-				&bodies[i],
-			),
+			c.createActions(l, &bodies[i])...,
 		)
 	}
 
@@ -128,6 +123,24 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 
 	return events, nil
+}
+
+func (c Crawler) createActions(link string, body *string) []chromedp.Action {
+	return []chromedp.Action{
+		chromedp.ActionFunc(func(context.Context) error {
+			c.logger.Info(
+				"run",
+				zap.Any("link", link),
+			)
+			return nil
+		}),
+		chromedp.Navigate(link),
+		chromedp.Sleep(time.Second * 2),
+		chromedp.EvaluateAsDevTools(
+			c.target.script,
+			body,
+		),
+	}
 }
 
 func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string, target string, id string, pw string) (*Crawler, error) {
