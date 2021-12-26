@@ -12,6 +12,7 @@ metadata:
 spec:
   schedule: {{ .schedule }}
   concurrencyPolicy: {{ .concurrencyPolicy }}
+  startingDeadlineSeconds: 60
   jobTemplate:
     spec:
       backoffLimit: {{ .backoffLimit }}
