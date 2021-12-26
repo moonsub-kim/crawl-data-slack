@@ -27,8 +27,8 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	var jsonBody string
 	var dtos []DTO
 
-	yesterday := time.Now().Add(time.Hour*9).AddDate(0, 0, -1).Format("2006-01-02") // UTCNOW -> KST -> yesterday -> formating
-	c.logger.Info("yesterday", zap.String("yesterday", yesterday))
+	startDate := time.Now().Add(time.Hour*9).AddDate(0, 0, -3).Format("2006-01-02") // UTCNOW -> KST -> 3days ago -> formating
+	c.logger.Info("startDate", zap.String("startDate", startDate))
 	err := chromedp.Run(
 		c.ctx,
 		chromedp.Navigate("https://gr.buzzvil.com/gw/uat/uia/egovLoginUsr.do"),
@@ -44,14 +44,17 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		),
 		chromedp.Sleep(time.Second*2),
 
-		// 반려함, (test용 결재요청함 2002010000)
-		chromedp.Navigate(`https://gr.buzzvil.com/eap/ea/eadoc/EaDocList.do?menu_no=2002070000`),
+		// master 반려함
+		chromedp.Navigate(`https://gr.buzzvil.com/eap/admin/eadoc/EADocMngList.do?menu_no=1705020000`),
 
 		// 전자 결재 - 반려함: 일자 조정 버튼
 		chromedp.EvaluateAsDevTools(
 			fmt.Sprintf(
-				`document.getElementById('from_date').value = '%s'; document.getElementById('searchBtn').click();`,
-				yesterday,
+				`document.getElementById('from_date').value = '%s';
+				document.getElementById('txt_doc_no').value = '지출결의서';
+				document.querySelector('#ddlDocSts').value='100'; // 반려상태
+				BindPuddGrid();`,
+				startDate,
 			),
 			nil,
 		),
@@ -61,7 +64,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		chromedp.Evaluate(
 			`
 			function map_object(arr) {
-				const indexMap = {2: "uid", 3: "doc_name", 4: "request_date", 9: "drafter", 10: "status"};
+				const indexMap = {2: "uid", 3: "doc_name", 4: "request_date", 6: "drafter", 7: "status"};
 				var keys = Object.keys(indexMap);
 				var obj = {};
 

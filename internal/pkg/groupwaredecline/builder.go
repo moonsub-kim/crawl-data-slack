@@ -32,7 +32,7 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, maste
 				UserName: drafterName,
 				UID:      dto.UID,
 				Name:     "declined",
-				Message:  fmt.Sprintf("결재(`%s`)가 반려되었습니다. <https://gr.buzzvil.com/gw/userMain.do|그룹웨어>에서 확인해주세요.", dto.DocName),
+				Message:  fmt.Sprintf("결재(`%s`)가 반려되었습니다. <https://gr.buzzvil.com/gw/userMain.do|그룹웨어>에서 확인해주세요.\n반려된 문서는 수정이 불가능하므로 새로 작성해주셔야 하며, 기존에 작성해둔 결제건에 대한 적요, 증빙유형등은 그대로 남아있습니다.", dto.DocName),
 			},
 			crawler.Event{
 				Crawler:  crawlerName,
@@ -45,12 +45,16 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, maste
 		)
 
 		for _, master := range masters {
+			if reviewerName == master {
+				continue
+			}
+
 			events = append(events, crawler.Event{
 				Crawler:  crawlerName,
 				Job:      jobName,
 				UserName: master,
 				UID:      dto.UID,
-				Name:     "notified_declined_master",
+				Name:     fmt.Sprintf("notified_declined_master_%s", master),
 				Message:  fmt.Sprintf("%s 가 %s 에게 `%s`를 반려 처리 하였습니다.", reviewerName, drafterName, dto.DocName),
 			})
 		}
