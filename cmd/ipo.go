@@ -6,8 +6,8 @@ import (
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/ipo"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/slackclient"
-	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/wanted"
 	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func CrawlWanted(c *cli.Context) error {
+func CrawlIPO(c *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	mysqlConn := os.Getenv("MYSQL_CONN")
 
@@ -37,19 +37,19 @@ func CrawlWanted(c *cli.Context) error {
 
 	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
 	repository := repository.NewRepository(logger, db)
-	wantedCrawler := wanted.NewCrawler(logger, c.String("channel"), c.String("query"))
+	ipoCrawler := ipo.NewCrawler(logger, c.String("channel"))
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
 
 	usecase := crawler.NewUseCase(
 		logger,
 		repository,
-		wantedCrawler,
+		ipoCrawler,
 		client,
 		client,
 	)
 
-	err = usecase.Work(wantedCrawler.GetCrawlerName(), wantedCrawler.GetJobName())
+	err = usecase.Work(ipoCrawler.GetCrawlerName(), ipoCrawler.GetJobName())
 	if err != nil {
 		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
 		return err

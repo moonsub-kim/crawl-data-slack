@@ -71,6 +71,13 @@ var Commands = []*cli.Command{
 				},
 				Action: CrawlEomisae,
 			},
+			{
+				Name: "ipo",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "channel"},
+				},
+				Action: CrawlIPO,
+			},
 		},
 	},
 	{

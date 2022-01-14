@@ -18,6 +18,7 @@ up:
 # bin/crawl-data-slack crawl quasarzone --channel quasarzone
 # bin/crawl-data-slack crawl book --channel gos16052
 # bin/crawl-data-slack crawl eomisae --channel gos16052 --target raffle
+# bin/crawl-data-slack crawl ipo --channel gos16052
 shell:
 	@docker-compose build app
 	@docker-compose run --name crawl-data-slack-shell --rm app bash
@@ -27,6 +28,9 @@ docker-upload:
 	@docker tag crawl-data-slack_app gos16052/crawl-data-slack:$(version)
 	@docker push gos16052/crawl-data-slack:$(version)
 
+# eks-rw
+# kubectx dev
+# kubens grslack
 helm-upgrade: docker-upload
 	@helm upgrade grslack helm/crawl-data-slack -f helm/values/values.yaml
 
