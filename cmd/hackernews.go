@@ -11,8 +11,6 @@ import (
 	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 func CrawlHackerNews(c *cli.Context) error {
@@ -21,16 +19,7 @@ func CrawlHackerNews(c *cli.Context) error {
 
 	logger := zapLogger()
 
-	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(
-		&repository.Event{},
-		&repository.Restriction{},
-		&repository.User{},
-	)
+	db, err := openMysql(mysqlConn)
 	if err != nil {
 		return err
 	}

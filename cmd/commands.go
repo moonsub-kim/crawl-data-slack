@@ -9,9 +9,13 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var Commands = []*cli.Command{
@@ -40,13 +44,6 @@ var Commands = []*cli.Command{
 					&cli.StringFlag{Name: "channel"},
 				},
 				Action: CrawlQuasarZoneSales,
-			},
-			{
-				Name: "book",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel"},
-				},
-				Action: CrawlBook,
 			},
 			{
 				Name: "gitpublic",
@@ -165,4 +162,40 @@ func zapLogger() *zap.Logger {
 	))
 
 	return zapLogger
+}
+
+func migrate(db *gorm.DB) error {
+	return db.AutoMigrate(
+		&repository.Event{},
+		&repository.Restriction{},
+		&repository.User{},
+	)
+}
+
+func openPostgres(conn string) (*gorm.DB, error) {
+	db, err := gorm.Open(postgres.Open(conn), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+
+	err = migrate(db)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+func openMysql(conn string) (*gorm.DB, error) {
+	db, err := gorm.Open(mysql.Open(conn), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+
+	err = migrate(db)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }

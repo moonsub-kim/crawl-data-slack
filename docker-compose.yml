@@ -19,6 +19,7 @@ services:
       - EOMISAE_PW=${EOMISAE_PW}
       - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
       - MYSQL_CONN=${MYSQL_CONN:-root@tcp(db:3306)/crawler?parseTime=true&charset=utf8}
+      - POSTGRES_CONN=${POSTGRES_CONN:-host=postgres user=crawler password=crawler dbname=crawler port=5432 sslmode=disable}
       - CHROME_HOST=chrome:9222
       # - CHROME_LOG_LEVEL=DEBUG
     volumes:
@@ -26,6 +27,7 @@ services:
     depends_on:
      - db
      - chrome
+     - postgres
 
   chrome:
     container_name: chrome
@@ -47,6 +49,15 @@ services:
      - MYSQL_ALLOW_EMPTY_PASSWORD=1
     volumes:
       - mysql_data:/var/lib/mysql
+
+  postgres:
+    image: "postgres:10.6"
+    environment:
+      - POSTGRES_USER=crawler
+      - POSTGRES_PASSWORD=crawler
+      - POSTGRES_DB=crawler
+    ports:
+      - "5432:5432"
 
 volumes:
   mysql_data:

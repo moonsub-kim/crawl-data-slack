@@ -11,26 +11,16 @@ import (
 	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 func CrawlIPO(c *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
-	mysqlConn := os.Getenv("MYSQL_CONN")
+	postgresConn := os.Getenv("POSTGRES_CONN")
 
 	logger := zapLogger()
 
-	db, err := gorm.Open(mysql.Open(mysqlConn), &gorm.Config{})
-	if err != nil {
-		return err
-	}
-
-	err = db.AutoMigrate(
-		&repository.Event{},
-		&repository.Restriction{},
-		&repository.User{},
-	)
+	logger.Info("conn", zap.Any("con", postgresConn))
+	db, err := openPostgres(postgresConn)
 	if err != nil {
 		return err
 	}
