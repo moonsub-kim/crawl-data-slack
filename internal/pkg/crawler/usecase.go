@@ -8,11 +8,11 @@ import (
 )
 
 type UseCase struct {
-	logger      *zap.Logger
-	repository  Repository
-	crawler     Crawler
-	notifier    Notifier
-	userService UserService
+	logger         *zap.Logger
+	repository     Repository
+	crawler        Crawler
+	notifier       Notifier
+	channelService ChannelService
 }
 
 // TODO rename
@@ -118,27 +118,27 @@ func (u UseCase) notify(events []Event) error {
 	return nil
 }
 
-func (u UseCase) getUser(userName string) (User, error) {
+func (u UseCase) getUser(userName string) (Channel, error) {
 	user, err := u.repository.GetUser(userName)
 	if err != nil {
-		return User{}, err
+		return Channel{}, err
 	} else if user.ID == "" {
 		// sync with slack
-		users, err := u.userService.GetUsers()
+		users, err := u.channelService.GetChannels()
 		if err != nil {
-			return User{}, err
+			return Channel{}, err
 		}
 
 		err = u.repository.SaveUsers(users)
 		if err != nil {
-			return User{}, err
+			return Channel{}, err
 		}
 
 		user, err = u.repository.GetUser(userName)
 		if err != nil {
-			return User{}, err
+			return Channel{}, err
 		} else if user.ID == "" {
-			return User{}, errors.New("empty user")
+			return Channel{}, errors.New("empty user")
 		}
 	}
 
@@ -154,13 +154,13 @@ func NewUseCase(
 	repository Repository,
 	crawler Crawler,
 	notifier Notifier,
-	userService UserService,
+	channelService ChannelService,
 ) *UseCase {
 	return &UseCase{
-		logger:      logger,
-		repository:  repository,
-		crawler:     crawler,
-		notifier:    notifier,
-		userService: userService,
+		logger:         logger,
+		repository:     repository,
+		crawler:        crawler,
+		notifier:       notifier,
+		channelService: channelService,
 	}
 }

@@ -32,11 +32,11 @@ func (Event) TableName() string {
 	return "event"
 }
 
-type User struct {
+type Channel struct {
 	ID   string `gorm:"type:varchar(128);primary_key"`
 	Name string `gorm:"type:varchar(128);index"`
 }
 
-func (User) TableName() string {
-	return "user"
+func (Channel) TableName() string {
+	return "channel"
 }

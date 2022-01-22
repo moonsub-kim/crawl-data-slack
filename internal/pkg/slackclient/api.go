@@ -25,7 +25,7 @@ func (c Client) Notify(n crawler.Notification) error {
 	return err
 }
 
-func (c Client) GetUsers() ([]crawler.User, error) {
+func (c Client) GetChannels() ([]crawler.Channel, error) {
 	slackUsers, err := c.api.GetUsers()
 	if err != nil {
 		c.logger.Error("getUsers", zap.Error(err))

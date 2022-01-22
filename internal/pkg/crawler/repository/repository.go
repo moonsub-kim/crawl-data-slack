@@ -46,19 +46,19 @@ func (r Repository) SaveRestriction(restriction crawler.Restriction) error {
 	return r.db.Create(&model).Error
 }
 
-func (r Repository) GetUser(userName string) (crawler.User, error) {
-	var user User
+func (r Repository) GetUser(userName string) (crawler.Channel, error) {
+	var user Channel
 	err := r.db.First(&user, "name = ?", userName).Error
 	if errors.As(err, &gorm.ErrRecordNotFound) {
-		return crawler.User{}, nil
+		return crawler.Channel{}, nil
 	} else if err != nil {
-		return crawler.User{}, err
+		return crawler.Channel{}, err
 	}
 
 	return r.mapper.mapModelUserToUser(user), nil
 }
 
-func (r Repository) SaveUsers(users []crawler.User) error {
+func (r Repository) SaveUsers(users []crawler.Channel) error {
 	modelUsers := r.mapper.mapUsersToModelUsers(users)
 	return r.db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "id"}}, // key colume

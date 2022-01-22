@@ -13,7 +13,7 @@ type Event struct {
 	Message  string
 }
 
-type User struct {
+type Channel struct {
 	ID   string
 	Name string
 }
@@ -30,5 +30,5 @@ type Restriction struct {
 
 type Notification struct {
 	Event Event
-	User  User
+	User  Channel
 }
