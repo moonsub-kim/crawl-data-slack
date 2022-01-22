@@ -1,9 +1,5 @@
 package crawler
 
-import (
-	"time"
-)
-
 type Event struct {
 	Crawler  string
 	Job      string
@@ -16,16 +12,6 @@ type Event struct {
 type Channel struct {
 	ID   string
 	Name string
-}
-
-type Restriction struct {
-	Crawler   string
-	Job       string
-	StartDate time.Time
-	EndDate   time.Time
-	HourFrom  int
-	HourTo    int
-	Allow     bool
 }
 
 type Notification struct {

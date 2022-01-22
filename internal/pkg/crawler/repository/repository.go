@@ -28,24 +28,6 @@ func (r Repository) SaveEvent(event crawler.Event) error {
 	return nil
 }
 
-func (r Repository) GetRestriction(c string, j string) (crawler.Restriction, error) {
-	var restriction Restriction
-	err := r.db.Where("crawler = ? AND job = ?", c, j).Order("created_at DESC").First(&restriction).Error
-	if errors.As(err, &gorm.ErrRecordNotFound) {
-		r.logger.Info("Ignore empty restriction")
-		return crawler.Restriction{}, nil
-	} else if err != nil {
-		return crawler.Restriction{}, err
-	}
-
-	return r.mapper.mapModelRestrictionToRestriction(restriction), nil
-}
-
-func (r Repository) SaveRestriction(restriction crawler.Restriction) error {
-	model := r.mapper.mapRestrictionToModelRestriction(restriction)
-	return r.db.Create(&model).Error
-}
-
 func (r Repository) GetUser(userName string) (crawler.Channel, error) {
 	var user Channel
 	err := r.db.First(&user, "name = ?", userName).Error

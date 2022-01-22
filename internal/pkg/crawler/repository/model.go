@@ -2,22 +2,6 @@ package repository
 
 import "time"
 
-type Restriction struct {
-	ID        int64  `gorm:"autoIncrement"`
-	Crawler   string `gorm:"type:varchar(128);uniqueIndex:crawler_job_created"`
-	Job       string `gorm:"type:varchar(128);uniqueIndex:crawler_job_created"`
-	StartDate time.Time
-	EndDate   time.Time
-	HourFrom  int
-	HourTo    int
-	CreatedAt time.Time `gorm:"autoCreateTime;uniqueIndex:crawler_job_created"`
-	Allow     bool
-}
-
-func (Restriction) TableName() string {
-	return "restriction"
-}
-
 type Event struct {
 	Crawler   string    `gorm:"type:varchar(128)"`
 	Job       string    `gorm:"type:varchar(128)"`

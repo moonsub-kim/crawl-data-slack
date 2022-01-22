@@ -167,7 +167,6 @@ func zapLogger() *zap.Logger {
 func migrate(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&repository.Event{},
-		&repository.Restriction{},
 		&repository.Channel{},
 	)
 }

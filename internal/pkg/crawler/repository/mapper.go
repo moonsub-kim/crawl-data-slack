@@ -39,27 +39,3 @@ func (m mapper) mapModelUserToUser(u Channel) crawler.Channel {
 		Name: u.Name,
 	}
 }
-
-func (m mapper) mapModelRestrictionToRestriction(r Restriction) crawler.Restriction {
-	return crawler.Restriction{
-		Crawler:   r.Crawler,
-		Job:       r.Job,
-		StartDate: r.StartDate,
-		EndDate:   r.EndDate,
-		HourFrom:  r.HourFrom,
-		HourTo:    r.HourTo,
-		Allow:     r.Allow,
-	}
-}
-
-func (m mapper) mapRestrictionToModelRestriction(r crawler.Restriction) Restriction {
-	return Restriction{
-		Crawler:   r.Crawler,
-		Job:       r.Job,
-		StartDate: r.StartDate,
-		EndDate:   r.EndDate,
-		HourFrom:  r.HourFrom,
-		HourTo:    r.HourTo,
-		Allow:     r.Allow,
-	}
-}

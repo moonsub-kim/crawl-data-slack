@@ -2,7 +2,6 @@ package crawler
 
 import (
 	"errors"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -17,14 +16,6 @@ type UseCase struct {
 
 // TODO rename
 func (u UseCase) Work(crawler string, job string) error {
-	allowed, err := u.isAllowed(crawler, job)
-	if err != nil {
-		return err
-	} else if !allowed {
-		u.logger.Info("not allowed to run command")
-		return nil
-	}
-
 	crawledEvents, err := u.crawler.Crawl()
 	if err != nil {
 		return err
@@ -36,41 +27,6 @@ func (u UseCase) Work(crawler string, job string) error {
 	}
 
 	return u.notify(events)
-}
-
-func (u UseCase) isAllowed(crawler string, job string) (bool, error) {
-	r, err := u.repository.GetRestriction(crawler, job)
-	if err != nil {
-		return false, err
-	}
-
-	now := time.Now().Add(time.Hour * 9) // kst변환
-	u.logger.Info("isAllowed()", zap.Any("restriction", r))
-
-	// no restriction record
-	if now.After(r.StartDate) && now.Before(r.EndDate) {
-		return true, nil
-	}
-
-	// allow cond   return
-	// true  true   true	(run command)
-	// true  false  false
-	// false true   false
-	// false false  true	(run commmand)
-	cond := r.HourFrom <= now.Hour() && now.Hour() < r.HourTo
-	if r.Allow {
-		if cond {
-			return true, nil
-		} else { // !cond
-			return false, nil
-		}
-	} else { // !r.Allow
-		if cond {
-			return false, nil
-		} else { // !cond
-			return true, nil
-		}
-	}
 }
 
 // save events and returns saved events
@@ -143,10 +99,6 @@ func (u UseCase) getUser(userName string) (Channel, error) {
 	}
 
 	return user, nil
-}
-
-func (u UseCase) AddRestriction(restriction Restriction) error {
-	return u.repository.SaveRestriction(restriction)
 }
 
 func NewUseCase(
