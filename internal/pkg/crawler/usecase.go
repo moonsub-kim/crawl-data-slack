@@ -47,7 +47,7 @@ func (u UseCase) filterEvents(crawledEvents []Event) ([]Event, error) {
 
 func (u UseCase) notify(events []Event) error {
 	for i, e := range events {
-		user, err := u.getUser(e.UserName)
+		user, err := u.getChannel(e.UserName)
 		if err != nil {
 			return err
 		}
@@ -74,8 +74,8 @@ func (u UseCase) notify(events []Event) error {
 	return nil
 }
 
-func (u UseCase) getUser(userName string) (Channel, error) {
-	user, err := u.repository.GetUser(userName)
+func (u UseCase) getChannel(userName string) (Channel, error) {
+	user, err := u.repository.GetChannel(userName)
 	if err != nil {
 		return Channel{}, err
 	} else if user.ID == "" {
@@ -85,12 +85,12 @@ func (u UseCase) getUser(userName string) (Channel, error) {
 			return Channel{}, err
 		}
 
-		err = u.repository.SaveUsers(users)
+		err = u.repository.SaveChannels(users)
 		if err != nil {
 			return Channel{}, err
 		}
 
-		user, err = u.repository.GetUser(userName)
+		user, err = u.repository.GetChannel(userName)
 		if err != nil {
 			return Channel{}, err
 		} else if user.ID == "" {

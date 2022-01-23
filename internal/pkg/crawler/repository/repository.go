@@ -16,10 +16,18 @@ type Repository struct {
 	mapper mapper
 }
 
+func (r Repository) isPostgresqkAlreadyExsitsError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "duplicate key value violates unique constraint")
+}
+
+func (r Repository) isMysqlAlreadyExsitsError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "1062")
+}
+
 func (r Repository) SaveEvent(event crawler.Event) error {
 	e := r.mapper.mapEventToModelEvent(event)
 	err := r.db.Create(&e).Error
-	if err != nil && strings.Contains(err.Error(), "1062") {
+	if r.isMysqlAlreadyExsitsError(err) || r.isPostgresqkAlreadyExsitsError(err) {
 		return crawler.AlreadyExistsError{}
 	} else if err != nil {
 		return err
@@ -28,7 +36,7 @@ func (r Repository) SaveEvent(event crawler.Event) error {
 	return nil
 }
 
-func (r Repository) GetUser(userName string) (crawler.Channel, error) {
+func (r Repository) GetChannel(userName string) (crawler.Channel, error) {
 	var user Channel
 	err := r.db.First(&user, "name = ?", userName).Error
 	if errors.As(err, &gorm.ErrRecordNotFound) {
@@ -37,11 +45,11 @@ func (r Repository) GetUser(userName string) (crawler.Channel, error) {
 		return crawler.Channel{}, err
 	}
 
-	return r.mapper.mapModelUserToUser(user), nil
+	return r.mapper.mapModelChannelToChannel(user), nil
 }
 
-func (r Repository) SaveUsers(users []crawler.Channel) error {
-	modelUsers := r.mapper.mapUsersToModelUsers(users)
+func (r Repository) SaveChannels(users []crawler.Channel) error {
+	modelUsers := r.mapper.mapChannelsToModelChannels(users)
 	return r.db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "id"}}, // key colume
 	}).Create(&modelUsers).Error

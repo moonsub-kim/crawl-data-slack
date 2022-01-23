@@ -18,22 +18,22 @@ func (m mapper) mapEventToModelEvent(e crawler.Event) Event {
 	}
 }
 
-func (m mapper) mapUserToModelUser(u crawler.Channel) Channel {
+func (m mapper) mapChannelToModelChannel(u crawler.Channel) Channel {
 	return Channel{
 		ID:   u.ID,
 		Name: u.Name,
 	}
 }
 
-func (m mapper) mapUsersToModelUsers(users []crawler.Channel) []Channel {
+func (m mapper) mapChannelsToModelChannels(users []crawler.Channel) []Channel {
 	var modelUsers []Channel
 	for _, u := range users {
-		modelUsers = append(modelUsers, m.mapUserToModelUser(u))
+		modelUsers = append(modelUsers, m.mapChannelToModelChannel(u))
 	}
 	return modelUsers
 }
 
-func (m mapper) mapModelUserToUser(u Channel) crawler.Channel {
+func (m mapper) mapModelChannelToChannel(u Channel) crawler.Channel {
 	return crawler.Channel{
 		ID:   u.ID,
 		Name: u.Name,
