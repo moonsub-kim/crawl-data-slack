@@ -27,7 +27,7 @@ var urls map[string]string = map[string]string{
 
 const LEGNTH int = 10
 
-func (c Crawler) GetCrawlerName() string { return "eomisae" }
+func (c Crawler) GetCrawlerName() string { return "financial-report" }
 func (c Crawler) GetJobName() string     { return c.category }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
