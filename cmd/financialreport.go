@@ -1,0 +1,82 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"log"
+	"os"
+	"reflect"
+	"strings"
+
+	"github.com/chromedp/chromedp"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/financialreport"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/slackclient"
+	"github.com/slack-go/slack"
+	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
+)
+
+// CrawlFinancialReport
+func CrawlFinancialReport(ctx *cli.Context) error {
+	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
+	postgresConn := os.Getenv("POSTGRES_CONN")
+	chromeHost := os.Getenv("CHROME_HOST")
+
+	logger := zapLogger()
+
+	db, err := openPostgres(postgresConn)
+	if err != nil {
+		return err
+	}
+
+	url, err := getChromeURL(logger, chromeHost)
+	if err != nil {
+		return err
+	}
+	logger.Info("chrome url", zap.String("url", url))
+
+	devtoolsWSURL := flag.String("devtools-ws-url", url, "DevTools Websocket URL")
+	allocatorctx, cancel := chromedp.NewRemoteAllocator(context.Background(), *devtoolsWSURL)
+	defer cancel()
+
+	chromectx, cancel := chromedp.NewContext(
+		allocatorctx,
+		chromedp.WithLogf(log.Printf),
+		// chromedp.WithDebugf(log.Printf),
+	)
+	defer cancel()
+
+	var masters []string
+	if ctx.String("masters") != "" {
+		masters = strings.Split(ctx.String("masters"), ",")
+		logger.Info("masters", zap.Any("masters", masters))
+	}
+
+	repository := repository.NewRepository(logger, db)
+	financialReportCrawler, err := financialreport.NewCrawler(logger, chromectx, ctx.String("channel"), ctx.String("category"))
+	if err != nil {
+		logger.Error("init crawler", zap.Error((err)))
+		return err
+	}
+	api := slack.New(slackBotToken)
+	client := slackclient.NewClient(logger, api)
+
+	usecase := crawler.NewUseCase(
+		logger,
+		repository,
+		financialReportCrawler,
+		client,
+		client,
+	)
+
+	err = usecase.Work(financialReportCrawler.GetCrawlerName(), financialReportCrawler.GetJobName())
+	if err != nil {
+		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
+		return err
+	}
+
+	logger.Info("Succeed")
+	return nil
+}

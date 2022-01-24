@@ -75,6 +75,14 @@ var Commands = []*cli.Command{
 				},
 				Action: CrawlIPO,
 			},
+			{
+				Name: "financial-report",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "channel"},
+					&cli.StringFlag{Name: "category"},
+				},
+				Action: CrawlFinancialReport,
+			},
 		},
 	},
 	{
