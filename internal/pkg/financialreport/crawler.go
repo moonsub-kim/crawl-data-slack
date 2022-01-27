@@ -15,26 +15,25 @@ type Crawler struct {
 	ctx          context.Context
 	eventBuilder eventBuilder
 
-	channel  string
-	category string
-	url      string
+	channel string
 }
 
-var urls map[string]string = map[string]string{
-	"stock":  "https://globalmonitor.einfomax.co.kr/ht_usa.html#/3/02",
-	"market": "https://globalmonitor.einfomax.co.kr/ht_usa.html#/3/03",
-}
-
-const LEGNTH int = 10
+const URL string = "https://globalmonitor.einfomax.co.kr/ht_usa.html#/3/01"
+const CONTENTS int = 10
+const SCAN_PAGES int = 5
 
 func (c Crawler) GetCrawlerName() string { return "financial-report" }
-func (c Crawler) GetJobName() string     { return c.category }
+func (c Crawler) GetJobName() string     { return "einfomax" }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
-	dtos := make([]DTO, LEGNTH)
+	dtos := make([]DTO, CONTENTS)
 	var actions []chromedp.Action
-	for i := 0; i < LEGNTH; i++ {
-		actions = append(actions, c.createActions(c.url, i, &dtos[i])...)
+	for i := 0; i < SCAN_PAGES; i++ {
+		for j := 0; j < CONTENTS; j++ {
+			actions = append(actions, c.crawlActions(URL, j, &dtos[i*CONTENTS+j])...)
+		}
+		nextPage := i + 1
+		actions = append(actions, c.nextPageActions(nextPage)...)
 	}
 
 	err := chromedp.Run(
@@ -66,7 +65,15 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return events, nil
 }
 
-func (c Crawler) createActions(link string, i int, dto *DTO) []chromedp.Action {
+func (c Crawler) nextPageActions(i int) []chromedp.Action {
+	pageIndex := i + 1 // 버튼이 < 1 2 3 4 5 6 8 9 10 > 총 12개임.
+	return []chromedp.Action{
+		chromedp.Evaluate(fmt.Sprintf("document.querySelectorAll('div.paging-area > a')[%d].click()", pageIndex), nil),
+		chromedp.Sleep(time.Second * 1),
+	}
+}
+
+func (c Crawler) crawlActions(link string, j int, dto *DTO) []chromedp.Action {
 	return []chromedp.Action{
 		chromedp.Navigate(link),
 		chromedp.Sleep(time.Second * 1),
@@ -103,7 +110,7 @@ func (c Crawler) createActions(link string, i int, dto *DTO) []chromedp.Action {
 
 				main()
 				`,
-				i,
+				j,
 			),
 			dto,
 		),
@@ -115,7 +122,7 @@ func (c Crawler) createActions(link string, i int, dto *DTO) []chromedp.Action {
 			}
 
 			for _, t := range targets {
-				if t.URL == "about:blank" || t.URL == c.url {
+				if t.URL == "about:blank" || t.URL == URL {
 					continue
 				}
 				if !t.Attached {
@@ -131,18 +138,11 @@ func (c Crawler) createActions(link string, i int, dto *DTO) []chromedp.Action {
 	}
 }
 
-func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string, category string) (*Crawler, error) {
-	url, ok := urls[category]
-	if !ok {
-		return nil, fmt.Errorf("category %s not matched", category)
-	}
-
+func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string) (*Crawler, error) {
 	return &Crawler{
 		logger: logger,
 		ctx:    chromectx,
 
-		channel:  channel,
-		category: category,
-		url:      url,
+		channel: channel,
 	}, nil
 }

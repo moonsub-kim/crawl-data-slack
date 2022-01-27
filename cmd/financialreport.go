@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"reflect"
-	"strings"
 
 	"github.com/chromedp/chromedp"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
@@ -48,14 +47,8 @@ func CrawlFinancialReport(ctx *cli.Context) error {
 	)
 	defer cancel()
 
-	var masters []string
-	if ctx.String("masters") != "" {
-		masters = strings.Split(ctx.String("masters"), ",")
-		logger.Info("masters", zap.Any("masters", masters))
-	}
-
 	repository := repository.NewRepository(logger, db)
-	financialReportCrawler, err := financialreport.NewCrawler(logger, chromectx, ctx.String("channel"), ctx.String("category"))
+	financialReportCrawler, err := financialreport.NewCrawler(logger, chromectx, ctx.String("channel"))
 	if err != nil {
 		logger.Error("init crawler", zap.Error((err)))
 		return err

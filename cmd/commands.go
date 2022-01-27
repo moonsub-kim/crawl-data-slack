@@ -79,39 +79,20 @@ var Commands = []*cli.Command{
 				Name: "financial-report",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "channel"},
-					&cli.StringFlag{Name: "category"},
 				},
 				Action: CrawlFinancialReport,
 			},
-		},
-	},
-	{
-		Name: "restriction",
-		Subcommands: []*cli.Command{
 			{
-				Name: "add",
+				Name: "spinnaker",
 				Flags: []cli.Flag{
-					&cli.TimestampFlag{Name: "start_date"},
-					&cli.TimestampFlag{Name: "end_date"},
-					&cli.TimestampFlag{Name: "hour_from"},
-					&cli.TimestampFlag{Name: "hour_to"},
+					&cli.StringFlag{Name: "channel"},
+					&cli.StringFlag{Name: "host"},
+					&cli.StringFlag{Name: "token"},
 				},
-				Action: AddRestriction,
+				Action: CrawlSpinnaker,
 			},
 		},
 	},
-	{
-		Name:        "test",
-		Subcommands: []*cli.Command{
-			// {Name: "slack", Action: TestSlack},
-			// {Name: "chrome", Action: TestChrome},
-		},
-	},
-}
-
-// AddRestriction adds a restriction
-func AddRestriction(ctx *cli.Context) error {
-	return nil
 }
 
 func getChromeURL(logger *zap.Logger, chromeHost string) (string, error) {
