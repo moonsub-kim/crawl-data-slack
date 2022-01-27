@@ -26,7 +26,7 @@ func (c Crawler) GetCrawlerName() string { return "financial-report" }
 func (c Crawler) GetJobName() string     { return "einfomax" }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
-	dtos := make([]DTO, CONTENTS)
+	dtos := make([]DTO, CONTENTS*SCAN_PAGES)
 	var actions []chromedp.Action
 	for i := 0; i < SCAN_PAGES; i++ {
 		for j := 0; j < CONTENTS; j++ {

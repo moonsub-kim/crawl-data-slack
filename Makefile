@@ -1,17 +1,35 @@
-init:
+##@ General
+
+help: ## Display this help.
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+##@ Development
+
+init: ## init creates .env file to inject environment variables
 	@echo "\
 	GROUPWARE_ID=\n\
 	GROUPWARE_PW=\n\
+
+	EOMISAE_ID=\n\
+	EOMISAE_PW=\n\
+
 	SLACK_BOT_TOKEN=\n\
 	" >> .env
 
-# crawl groupware -job declined_payments
-# crawl hackernews --channel hacker-news --point_threshold 100
-# crawl quasarzone --channel quasarzone
-# crawl book --channel gos16052
-# crawl eomisae --channel gos16052 --target raffle
-up:
-	@COMMAND="$(cmd)" docker-compose up --build app chrome
+# Examples
+# make up cmd="crawl groupware -job declined_payments"
+# make up cmd="crawl hackernews --channel CHANNEL --point_threshold 100"
+# make up cmd="crawl quasarzone --channel CHANNEL"
+# make up cmd="crawl eomisae --channel CHANNEL --target raffle"
+# make up cmd="crawl financial-report --channel CHANNEL"
+# make up cmd="crawl gitpublic --channel CHANNEL"
+# make up cmd="crawl ipo --channel CHANNEL"
+# make up cmd="crawl gitpublic --channel CHANNEL"
+# make up cmd="crawl spinnaker --channel CHANNEL --token GITHUB_TOKEN --host HOST"
+# make up cmd="crawl wanted --channel CHANNEL --query \"SEARCH_STRING\""
+up: ## Run the application `make up cmd="crawl financial-report --channel my_channel"`, open the Makefile to see more examples.
+	@docker-compose build app
+	@COMMAND="$(cmd)" docker-compose up app
 
 # bin/crawl-data-slack crawl groupware -job declined_payments
 # bin/crawl-data-slack crawl hackernews --channel hacker-news --point_threshold 100
@@ -19,11 +37,11 @@ up:
 # bin/crawl-data-slack crawl book --channel gos16052
 # bin/crawl-data-slack crawl eomisae --channel gos16052 --target raffle
 # bin/crawl-data-slack crawl ipo --channel gos16052
-shell:
+shell: ## Run the shell
 	@docker-compose build app
 	@docker-compose run --name crawl-data-slack-shell --rm app bash
 
-docker-upload:
+docker-upload: ## Upload the image to the docker registry `make docker-upload version=0.x.y`
 	@docker build .
 	@docker tag crawl-data-slack_app gos16052/crawl-data-slack:$(version)
 	@docker push gos16052/crawl-data-slack:$(version)
