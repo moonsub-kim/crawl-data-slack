@@ -13,6 +13,11 @@ import (
 var regexID *regexp.Regexp = regexp.MustCompile(`views/\d+`)
 var regexPrice *regexp.Regexp = regexp.MustCompile(`^.+? 가격 +(.+)`)
 
+var urls []string = []string{
+	"https://quasarzone.com/bbs/qb_saleinfo?_method=post&type=&page=1&category=PC%2F%ED%95%98%EB%93%9C%EC%9B%A8%EC%96%B4&popularity=&kind=subject&keyword=&sort=num%2C+reply&direction=DESC",
+	"https://quasarzone.com/bbs/qb_saleinfo?_method=post&type=&page=1&category=%EA%B0%80%EC%A0%84%2FTV&popularity=&kind=subject&keyword=&sort=num%2C+reply&direction=DESC",
+}
+
 type Crawler struct {
 	logger       *zap.Logger
 	channel      string
@@ -24,20 +29,12 @@ func (c Crawler) GetJobName() string     { return "sale-pc" }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
 	var dtos []DTO
-	res, err := soup.Get("https://quasarzone.com/bbs/qb_saleinfo?_method=post&type=&page=1&category=PC%2F%ED%95%98%EB%93%9C%EC%9B%A8%EC%96%B4&popularity=&kind=subject&keyword=&sort=num%2C+reply&direction=DESC")
-	if err != nil {
-		return nil, err
-	}
-
-	doc := soup.HTMLParse(res)
-	contents := doc.FindAll("div", "class", "market-info-list-cont")
-	for _, content := range contents {
-		dto := c.crawlEntry(content)
-		if dto.isEmpty() {
-			continue
+	for _, u := range urls {
+		results, err := c.crawlFor(u)
+		if err != nil {
+			return nil, err
 		}
-
-		dtos = append([]DTO{dto}, dtos...) // insert reversed order
+		dtos = append(dtos, results...)
 	}
 
 	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
@@ -51,6 +48,27 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		zap.Any("events", events),
 	)
 	return events, nil
+}
+
+func (c Crawler) crawlFor(url string) ([]DTO, error) {
+	var dtos []DTO
+	res, err := soup.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	doc := soup.HTMLParse(res)
+	contents := doc.FindAll("div", "class", "market-info-list-cont")
+	for _, content := range contents {
+		dto := c.crawlEntry(content)
+		if dto.isEmpty() {
+			continue
+		}
+
+		dtos = append(dtos, dto)
+	}
+
+	return dtos, nil
 }
 
 func (c Crawler) crawlEntry(content soup.Root) DTO {

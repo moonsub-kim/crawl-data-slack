@@ -42,7 +42,7 @@ shell: ## Run the shell
 	@docker-compose run --name crawl-data-slack-shell --rm app bash
 
 docker-upload: ## Upload the image to the docker registry `make docker-upload version=0.x.y`
-	@docker build .
+	@docker-compose build
 	@docker tag crawl-data-slack_app gos16052/crawl-data-slack:$(version)
 	@docker push gos16052/crawl-data-slack:$(version)
 
