@@ -15,18 +15,6 @@ func (f *filter) Reason() string {
 	return f.reason
 }
 
-type pcOnlyFilter struct {
-	filter
-}
-
-func (f *pcOnlyFilter) Filter(dto DTO) bool {
-	if dto.Category != "PC/하드웨어" {
-		f.reason = fmt.Sprintf("PC/하드웨어 != (%s)", dto.Category)
-		return true
-	}
-	return false
-}
-
 type statusFilter struct {
 	filter
 }

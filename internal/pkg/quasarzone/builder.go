@@ -21,7 +21,7 @@ func (b eventBuilder) filter(filters []Filter, dto DTO) (string, bool) {
 
 func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event
-	filters := []Filter{&pcOnlyFilter{}, &statusFilter{}}
+	filters := []Filter{&statusFilter{}}
 
 	for _, dto := range dtos {
 		reason, filtered := b.filter(filters, dto)
