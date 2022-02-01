@@ -1,6 +1,7 @@
 package gitpublic
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/anaskhan96/soup"
@@ -10,15 +11,19 @@ import (
 
 type Crawler struct {
 	logger       *zap.Logger
-	channel      string
 	eventBuilder eventBuilder
+
+	channel      string
+	organization string
 }
 
 func (c Crawler) GetCrawlerName() string { return "git" }
 func (c Crawler) GetJobName() string     { return "public_repo" }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
-	res, err := soup.Get(`https://github.com/orgs/Buzzvil/repositories`)
+	url := fmt.Sprintf(`https://github.com/orgs/%s/repositories`, c.organization)
+
+	res, err := soup.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -51,9 +56,10 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return events, nil
 }
 
-func NewCrawler(logger *zap.Logger, channel string) *Crawler {
+func NewCrawler(logger *zap.Logger, channel string, organization string) *Crawler {
 	return &Crawler{
-		logger:  logger,
-		channel: channel,
+		logger:       logger,
+		channel:      channel,
+		organization: organization,
 	}
 }

@@ -49,6 +49,7 @@ var Commands = []*cli.Command{
 				Name: "gitpublic",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "channel"},
+					&cli.StringFlag{Name: "organization"},
 				},
 				Action: CrawlGitPublic,
 			},

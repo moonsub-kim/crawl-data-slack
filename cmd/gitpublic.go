@@ -26,7 +26,7 @@ func CrawlGitPublic(c *cli.Context) error {
 
 	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
 	repository := repository.NewRepository(logger, db)
-	gitPublicCrawler := gitpublic.NewCrawler(logger, c.String("channel"))
+	gitPublicCrawler := gitpublic.NewCrawler(logger, c.String("channel"), c.String("organization"))
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
 
