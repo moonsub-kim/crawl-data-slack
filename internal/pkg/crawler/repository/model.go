@@ -17,7 +17,7 @@ func (Event) TableName() string {
 }
 
 type Channel struct {
-	ID   string `gorm:"type:varchar(128);primary_key"`
+	ID   string `gorm:"type:varchar(128);column:id;primary_key"`
 	Name string `gorm:"type:varchar(128);index"`
 }
 
