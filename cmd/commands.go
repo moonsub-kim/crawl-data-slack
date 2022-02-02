@@ -92,6 +92,13 @@ var Commands = []*cli.Command{
 				},
 				Action: CrawlSpinnaker,
 			},
+			{
+				Name: "techcrunch",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "channel"},
+				},
+				Action: CrawlTechCrunch,
+			},
 		},
 	},
 }
