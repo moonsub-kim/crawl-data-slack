@@ -74,31 +74,31 @@ func (u UseCase) notify(events []Event) error {
 	return nil
 }
 
-func (u UseCase) getChannel(userName string) (Channel, error) {
-	user, err := u.repository.GetChannel(userName)
+func (u UseCase) getChannel(name string) (Channel, error) {
+	c, err := u.repository.GetChannel(name)
 	if err != nil {
 		return Channel{}, err
-	} else if user.ID == "" {
+	} else if c.ID == "" {
 		// sync with slack
-		users, err := u.channelService.GetChannels()
+		channels, err := u.channelService.GetChannels()
 		if err != nil {
 			return Channel{}, err
 		}
 
-		err = u.repository.SaveChannels(users)
+		err = u.repository.SyncChannels(channels)
 		if err != nil {
 			return Channel{}, err
 		}
 
-		user, err = u.repository.GetChannel(userName)
+		c, err = u.repository.GetChannel(name)
 		if err != nil {
 			return Channel{}, err
-		} else if user.ID == "" {
-			return Channel{}, errors.New("empty user")
+		} else if c.ID == "" {
+			return Channel{}, errors.New("empty channel")
 		}
 	}
 
-	return user, nil
+	return c, nil
 }
 
 func NewUseCase(

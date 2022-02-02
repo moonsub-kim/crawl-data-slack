@@ -7,7 +7,6 @@ import (
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type Repository struct {
@@ -48,11 +47,15 @@ func (r Repository) GetChannel(userName string) (crawler.Channel, error) {
 	return r.mapper.mapModelChannelToChannel(user), nil
 }
 
-func (r Repository) SaveChannels(users []crawler.Channel) error {
-	modelUsers := r.mapper.mapChannelsToModelChannels(users)
-	return r.db.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "id"}}, // key colume
-	}).Create(&modelUsers).Error
+func (r Repository) SyncChannels(channels []crawler.Channel) error {
+	// use where condition to bypass protection logic in gorm
+	err := r.db.Where("true").Delete(Channel{}).Error
+	if err != nil {
+		return err
+	}
+
+	modelChannels := r.mapper.mapChannelsToModelChannels(channels)
+	return r.db.Clauses().Create(&modelChannels).Error
 }
 
 func NewRepository(logger *zap.Logger, db *gorm.DB) *Repository {
