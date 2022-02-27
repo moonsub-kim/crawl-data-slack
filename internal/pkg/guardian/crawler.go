@@ -24,7 +24,7 @@ type Crawler struct {
 }
 
 func (c Crawler) GetCrawlerName() string { return "guardian" }
-func (c Crawler) GetJobName() string     { return "public_repo" }
+func (c Crawler) GetJobName() string     { return "guardian" }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
 
