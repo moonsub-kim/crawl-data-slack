@@ -1,8 +1,9 @@
 package guardian
 
 type DTO struct {
-	ID       string
-	Datetime string
-	Title    string
-	Content  string
+	ID        string
+	Title     string
+	Content   string
+	CreatedAt string
+	UpdatedAt string
 }

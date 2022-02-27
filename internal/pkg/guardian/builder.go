@@ -12,17 +12,21 @@ type eventBuilder struct {
 func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event
 	for _, dto := range dtos {
+		t := dto.UpdatedAt
+		if dto.UpdatedAt != dto.CreatedAt {
+			t = "Updated " + dto.UpdatedAt
+		}
 		events = append(
 			events,
 			crawler.Event{
 				Crawler:  crawlerName,
 				Job:      jobName,
 				UserName: channel,
-				UID:      dto.ID,
+				UID:      dto.ID + dto.UpdatedAt,
 				Name:     dto.Title,
 				Message: fmt.Sprintf(
 					"[%s] *%s*\n%s",
-					dto.Datetime,
+					t,
 					dto.Title,
 					dto.Content,
 				),

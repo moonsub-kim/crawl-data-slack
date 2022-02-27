@@ -64,13 +64,20 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		re := regexp.MustCompile("( *\n)+")
 		content = re.ReplaceAllString(content, "\n")
 
+		createdAt := div.Find("time").Attrs()["datetime"]
+		updatedAt := createdAt
+		if p := div.Find("p", "class", "updated-time"); p.Error == nil {
+			updatedAt = p.Find("time").Attrs()["datetime"]
+		}
+
 		dtos = append(
 			[]DTO{ // reversed order
 				{
-					ID:       div.Attrs()["id"],
-					Datetime: div.Find("time").Attrs()["datetime"],
-					Title:    title,
-					Content:  content,
+					ID:        div.Attrs()["id"],
+					CreatedAt: createdAt,
+					UpdatedAt: updatedAt,
+					Title:     title,
+					Content:   content,
 				},
 			},
 			dtos...)
