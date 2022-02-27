@@ -47,7 +47,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 
 	doc := soup.HTMLParse(res)
-	divs := doc.FindAll("div", "class", "block--content")
+	divs := doc.Find("div", "class", "js-liveblog-body").FindAll("div", "class", "is-key-event")
 	var dtos []DTO
 	for _, div := range divs {
 		c.logger.Info(
