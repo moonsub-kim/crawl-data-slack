@@ -99,6 +99,14 @@ var Commands = []*cli.Command{
 				},
 				Action: CrawlTechCrunch,
 			},
+			{
+				Name: "guardian",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "channel"},
+					&cli.StringFlag{Name: "url-template"},
+				},
+				Action: CrawlGuardian,
+			},
 		},
 	},
 }
