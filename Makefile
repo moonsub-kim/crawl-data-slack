@@ -33,15 +33,19 @@ up: ## Run the application `make up cmd="crawl financial-report --channel my_cha
 	@docker-compose build app
 	@COMMAND="$(cmd)" docker-compose up app
 
-# bin/crawl-data-slack crawl groupware -job declined_payments
-# bin/crawl-data-slack crawl hackernews --channel hacker-news --point_threshold 100
-# bin/crawl-data-slack crawl quasarzone --channel quasarzone
-# bin/crawl-data-slack crawl book --channel gos16052
-# bin/crawl-data-slack crawl eomisae --channel gos16052 --target raffle
-# bin/crawl-data-slack crawl ipo --channel gos16052
+# crawl-data-slack crawl groupware -job declined_payments
+# crawl-data-slack crawl hackernews --channel hacker-news --point_threshold 100
+# crawl-data-slack crawl quasarzone --channel quasarzone
+# crawl-data-slack crawl book --channel gos16052
+# crawl-data-slack crawl eomisae --channel gos16052 --target raffle
+# crawl-data-slack crawl ipo --channel gos16052
 shell: ## Run the shell
 	@docker-compose build app
 	@docker-compose run --name crawl-data-slack-shell --rm app bash
+
+run: ## Run the cmd
+	@docker-compose build app
+	@docker-compose run --name crawl-data-slack-run --rm app $(cmd)
 
 docker-upload: ## Upload the image to the docker registry `make docker-upload version=0.x.y`
 	@docker-compose build

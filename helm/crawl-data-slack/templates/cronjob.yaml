@@ -31,10 +31,10 @@ spec:
           - name: {{ .jobName }}
             image: {{ $.Values.image }}:{{ $.Values.imageTag }}
             command:
-            - "/bin/sh"
+            - "sh"
             - "-c"
             - |
-              {{ if .chromeEnabled }}/bin/wait-for-it.sh localhost:9222 -t 60 -- {{ end }} {{ .command }}
+              {{ if .chromeEnabled }}wait-for-it.sh localhost:9222 -t 60 -- {{ end }} {{ .command }}
             env:
             {{ if .chromeEnabled }}
             - name: CHROME_HOST
@@ -48,7 +48,7 @@ spec:
           - name: sidecar-chrome
             image: chromedp/headless-shell:stable
             command:
-            - "/bin/sh"
+            - "sh"
             - "-c"
             - |
               /headless-shell/headless-shell --no-sandbox --remote-debugging-address=0.0.0.0 --remote-debugging-port=9222 --disable-dev-shm-usage &

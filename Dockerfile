@@ -1,4 +1,4 @@
-FROM golang:1.17.1 AS build
+FROM golang:1.17.7 AS build
 
 # Change working dir -> for locating configrations
 RUN mkdir -p /app
@@ -18,10 +18,8 @@ COPY ./cmd ./cmd/
 # Build the outyet command inside the container.
 RUN go build -o /go/bin/crawl-data-slack ./cmd
 
-FROM golang:1.17.1 AS prod
+FROM golang:1.17.7 AS prod
 
 COPY --from=build /go/bin/crawl-data-slack /go/bin/crawl-data-slack
 
 COPY ./wait-for-it.sh /bin/
-
-COPY . .
