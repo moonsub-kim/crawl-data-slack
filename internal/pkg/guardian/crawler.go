@@ -11,16 +11,19 @@ import (
 	"go.uber.org/zap"
 )
 
-// month (jan, feb, mar, ...), day(1, 2, ...)
-// const URL_TEMPLATE string = "https://www.theguardian.com/world/live/2022/%s/%d/russia-ukraine-latest-news-missile-strikes-on-oil-facilities-reported-as-some-russian-banks-cut-off-from-swift-system-live"
+// month (jan, feb, mar, ...)
+// day(1, 2, ...)
+// topic
+const URL_TEMPLATE string = "https://www.theguardian.com/world/live/2022/%s/%d/%s"
+
 // https://www.theguardian.com/world/live/2022/feb/27/russia-ukraine-latest-news-missile-strikes-on-oil-facilities-reported-as-some-russian-banks-cut-off-from-swift-system-live
 
 type Crawler struct {
 	logger       *zap.Logger
 	eventBuilder eventBuilder
 
-	channel      string
-	url_template string
+	channel string
+	topic   string
 }
 
 func (c Crawler) GetCrawlerName() string { return "guardian" }
@@ -31,7 +34,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	now := time.Now()
 	month := strings.ToLower(now.Month().String())[:3]
 	day := now.Day()
-	url := fmt.Sprintf(c.url_template, month, day)
+	url := fmt.Sprintf(URL_TEMPLATE, month, day, c.topic)
 
 	c.logger.Info(
 		"URL",
@@ -86,10 +89,10 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return events, nil
 }
 
-func NewCrawler(logger *zap.Logger, channel string, url_template string) *Crawler {
+func NewCrawler(logger *zap.Logger, channel string, topic string) *Crawler {
 	return &Crawler{
-		logger:       logger,
-		channel:      channel,
-		url_template: url_template,
+		logger:  logger,
+		channel: channel,
+		topic:   topic,
 	}
 }

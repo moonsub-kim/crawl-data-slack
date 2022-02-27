@@ -27,7 +27,7 @@ func CrawlGuardian(c *cli.Context) error {
 
 	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
 	repository := repository.NewRepository(logger, db)
-	guardianCrawler := guardian.NewCrawler(logger, c.String("channel"), c.String("url-template"))
+	guardianCrawler := guardian.NewCrawler(logger, c.String("channel"), c.String("topic"))
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
 
