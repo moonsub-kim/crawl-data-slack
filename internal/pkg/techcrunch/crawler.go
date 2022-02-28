@@ -33,11 +33,13 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		a := div.Find("a", "class", "post-block__title__link")
 		name := a.Text()
 		url := a.Attrs()["href"]
+		time := div.Find("time", "class", "river-byline__time")
 
 		dtos = append(dtos, DTO{
-			ID:   strings.TrimSpace(name),
-			Name: strings.TrimSpace(name),
-			URL:  strings.TrimSpace(url),
+			ID:        strings.TrimSpace(name),
+			Name:      strings.TrimSpace(name),
+			URL:       strings.TrimSpace(url),
+			CreatedAt: time.Attrs()["datetime"],
 		})
 	}
 
