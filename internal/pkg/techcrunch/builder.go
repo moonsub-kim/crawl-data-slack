@@ -12,6 +12,10 @@ type eventBuilder struct {
 func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event
 	for _, dto := range dtos {
+		name := dto.Name
+		if len(name) > 64 {
+			name = name[:64]
+		}
 		events = append(
 			events,
 			crawler.Event{
@@ -19,7 +23,7 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 				Job:      jobName,
 				UserName: channel,
 				UID:      dto.CreatedAt,
-				Name:     dto.Name[:128],
+				Name:     name,
 				Message:  fmt.Sprintf("[%s] <%s|%s>", dto.CreatedAt, dto.URL, dto.Name),
 			},
 		)
