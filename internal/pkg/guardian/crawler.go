@@ -1,12 +1,12 @@
 package guardian
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
-	"github.com/anaskhan96/soup"
+	"github.com/chromedp/chromedp"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"go.uber.org/zap"
 )
@@ -20,6 +20,7 @@ const URL_TEMPLATE string = "https://www.theguardian.com/world/live/2022/%s/%d/%
 
 type Crawler struct {
 	logger       *zap.Logger
+	ctx          context.Context
 	eventBuilder eventBuilder
 
 	channel string
@@ -29,59 +30,67 @@ type Crawler struct {
 func (c Crawler) GetCrawlerName() string { return "guardian" }
 func (c Crawler) GetJobName() string     { return "guardian" }
 
-func (c Crawler) Crawl() ([]crawler.Event, error) {
-
+func (c Crawler) getURL() string {
 	now := time.Now()
 	month := strings.ToLower(now.Month().String())[:3]
 	day := now.Day()
-	url := fmt.Sprintf(URL_TEMPLATE, month, day, c.topic)
+	return fmt.Sprintf(URL_TEMPLATE, month, day, c.topic)
+}
 
+func (c Crawler) Crawl() ([]crawler.Event, error) {
+	url := c.getURL()
 	c.logger.Info(
 		"URL",
 		zap.Any("url", url),
 	)
 
-	res, err := soup.Get(url)
+	var dtos []DTO
+	err := chromedp.Run(
+		c.ctx,
+		chromedp.Navigate(url),
+		chromedp.Sleep(time.Second*3),
+		chromedp.Evaluate(
+			`
+			function getTitle(div) {
+				h2 = div.querySelector('h2');
+				if (h2 === null) return ' ';
+				return h2.innerText;
+			}
+
+			function getUpdatedAt(div) {
+				p = div.querySelector('p.updated-time > time');
+				if (p === null) return '';
+				return p.getAttribute('datetime');
+			}
+
+			function main() {
+				var dtos = [];
+				divs = document.querySelectorAll('div.js-liveblog-body > div.is-key-event');
+				for (let div of divs) {
+					dtos.push({
+						title: getTitle(div),
+						id: div.id,
+						created_at: div.querySelector('time').getAttribute('datetime'),
+						updated_at: getUpdatedAt(div),
+						content: div.querySelector('div.block-elements').innerText,
+					});
+				}
+				return dtos;
+			}
+
+			main()
+			`,
+			&dtos,
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	doc := soup.HTMLParse(res)
-	divs := doc.Find("div", "class", "js-liveblog-body").FindAll("div", "class", "is-key-event")
-	var dtos []DTO
-	for _, div := range divs {
-		c.logger.Info(
-			"div",
-			zap.Any("text", div.FullText()),
-		)
-
-		title := " "
-		if h2 := div.Find("h2"); h2.Error == nil {
-			title = h2.FullText()
-		}
-
-		content := div.Find("div", "class", "block-elements").FullText()
-		re := regexp.MustCompile("( *\n)+")
-		content = re.ReplaceAllString(content, "\n")
-
-		createdAt := div.Find("time").Attrs()["datetime"]
-		updatedAt := createdAt
-		if p := div.Find("p", "class", "updated-time"); p.Error == nil {
-			updatedAt = p.Find("time").Attrs()["datetime"]
-		}
-
-		dtos = append(
-			[]DTO{ // reversed order
-				{
-					ID:        div.Attrs()["id"],
-					CreatedAt: createdAt,
-					UpdatedAt: updatedAt,
-					Title:     title,
-					Content:   content,
-				},
-			},
-			dtos...)
-	}
+	c.logger.Info(
+		"crawler",
+		zap.Any("dtos", dtos),
+	)
 
 	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
 	if err != nil {
@@ -96,9 +105,10 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return events, nil
 }
 
-func NewCrawler(logger *zap.Logger, channel string, topic string) *Crawler {
+func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string, topic string) *Crawler {
 	return &Crawler{
 		logger:  logger,
+		ctx:     chromectx,
 		channel: channel,
 		topic:   topic,
 	}

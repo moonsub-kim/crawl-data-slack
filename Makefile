@@ -28,7 +28,7 @@ init: ## init creates .env file to inject environment variables
 # make up cmd="crawl spinnaker --channel CHANNEL --token GITHUB_TOKEN --host HOST"
 # make up cmd="crawl wanted --channel CHANNEL --query \"SEARCH_STRING\""
 # make up cmd="crawl techcrunch --channel CHANNEL"
-# make up cmd="crawl guardian --channel CHANNEL --topic 'russia-ukraine-latest-news-missile-strikes-on-oil-facilities-reported-as-some-russian-banks-cut-off-from-swift-system-live'"
+# make up cmd="crawl guardian --channel CHANNEL --topic 'russia-ukraine-latest-news-missile-strikes-on-oil-facilities-reported-as-some-russian-banks-cut-off-from-swift-system-live?ilterKeyEvents=true'"
 up: ## Run the application `make up cmd="crawl financial-report --channel my_channel"`, open the Makefile to see more examples.
 	@docker-compose build app
 	@COMMAND="$(cmd)" docker-compose up app

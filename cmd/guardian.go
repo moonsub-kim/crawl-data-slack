@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
+	"flag"
+	"log"
 	"os"
 	"reflect"
 
+	"github.com/chromedp/chromedp"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/guardian"
@@ -16,6 +20,7 @@ import (
 func CrawlGuardian(c *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	postgresConn := os.Getenv("POSTGRES_CONN")
+	chromeHost := os.Getenv("CHROME_HOST")
 
 	logger := zapLogger()
 
@@ -25,9 +30,25 @@ func CrawlGuardian(c *cli.Context) error {
 		return err
 	}
 
-	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
+	url, err := getChromeURL(logger, chromeHost)
+	if err != nil {
+		return err
+	}
+	logger.Info("chrome url", zap.String("url", url))
+
+	devtoolsWSURL := flag.String("devtools-ws-url", url, "DevTools Websocket URL")
+	allocatorctx, cancel := chromedp.NewRemoteAllocator(context.Background(), *devtoolsWSURL)
+	defer cancel()
+
+	chromectx, cancel := chromedp.NewContext(
+		allocatorctx,
+		chromedp.WithLogf(log.Printf),
+		// chromedp.WithDebugf(log.Printf),
+	)
+	defer cancel()
+
 	repository := repository.NewRepository(logger, db)
-	guardianCrawler := guardian.NewCrawler(logger, c.String("channel"), c.String("topic"))
+	guardianCrawler := guardian.NewCrawler(logger, chromectx, c.String("channel"), c.String("topic"))
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
 

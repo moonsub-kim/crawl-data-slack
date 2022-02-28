@@ -13,7 +13,7 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 	var events []crawler.Event
 	for _, dto := range dtos {
 		t := dto.UpdatedAt
-		if dto.UpdatedAt != dto.CreatedAt {
+		if dto.UpdatedAt != "" {
 			t = "Updated " + dto.UpdatedAt
 		}
 		events = append(
