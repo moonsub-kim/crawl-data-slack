@@ -103,7 +103,7 @@ var Commands = []*cli.Command{
 				Name: "guardian",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "channel"},
-					&cli.StringFlag{Name: "topic"},
+					&cli.StringFlag{Name: "url"},
 				},
 				Action: CrawlGuardian,
 			},

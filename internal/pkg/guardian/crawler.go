@@ -2,8 +2,6 @@ package guardian
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/chromedp/chromedp"
@@ -24,30 +22,22 @@ type Crawler struct {
 	eventBuilder eventBuilder
 
 	channel string
-	topic   string
+	url     string
 }
 
 func (c Crawler) GetCrawlerName() string { return "guardian" }
 func (c Crawler) GetJobName() string     { return "guardian" }
 
-func (c Crawler) getURL() string {
-	now := time.Now()
-	month := strings.ToLower(now.Month().String())[:3]
-	day := now.Day()
-	return fmt.Sprintf(URL_TEMPLATE, month, day, c.topic)
-}
-
 func (c Crawler) Crawl() ([]crawler.Event, error) {
-	url := c.getURL()
 	c.logger.Info(
 		"URL",
-		zap.Any("url", url),
+		zap.Any("url", c.url),
 	)
 
 	var dtos []DTO
 	err := chromedp.Run(
 		c.ctx,
-		chromedp.Navigate(url),
+		chromedp.Navigate(c.url),
 		chromedp.Sleep(time.Second*3),
 		chromedp.Evaluate(
 			`
@@ -105,11 +95,11 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return events, nil
 }
 
-func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string, topic string) *Crawler {
+func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string, url string) *Crawler {
 	return &Crawler{
 		logger:  logger,
 		ctx:     chromectx,
 		channel: channel,
-		topic:   topic,
+		url:     url,
 	}
 }
