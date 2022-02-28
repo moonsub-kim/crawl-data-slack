@@ -51,8 +51,6 @@ func (c Client) GetChannels() ([]crawler.Channel, error) {
 		if err != nil {
 			c.logger.Error("getConversations", zap.Error(err))
 			return nil, err
-		} else if nextCursor == "" {
-			break
 		}
 		channels := c.mapper.mapSlackChannelsToUsers(slackChannels)
 		users = append(users, channels...)
@@ -61,6 +59,9 @@ func (c Client) GetChannels() ([]crawler.Channel, error) {
 			zap.Any("channels", channels),
 			zap.Any("nextCursor", nextCursor),
 		)
+		if nextCursor == "" {
+			break
+		}
 		time.Sleep(time.Second * 3)
 	}
 

@@ -109,6 +109,18 @@ var Commands = []*cli.Command{
 			},
 		},
 	},
+	{
+		Name: "slack",
+		Subcommands: []*cli.Command{
+			{
+				Name: "get-channel",
+				Flags: []cli.Flag{
+					&cli.StringFlag{Name: "channel"},
+				},
+				Action: GetChannel,
+			},
+		},
+	},
 }
 
 func getChromeURL(logger *zap.Logger, chromeHost string) (string, error) {
