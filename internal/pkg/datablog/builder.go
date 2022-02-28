@@ -1,4 +1,4 @@
-package techcrunch
+package datablog
 
 import (
 	"fmt"
@@ -18,9 +18,9 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 				Crawler:  crawlerName,
 				Job:      jobName,
 				UserName: channel,
-				UID:      dto.CreatedAt,
-				Name:     dto.Name[:128],
-				Message:  fmt.Sprintf("[%s] <%s|%s>", dto.CreatedAt, dto.URL, dto.Name),
+				UID:      dto.Title,
+				Name:     jobName,
+				Message:  fmt.Sprintf("<%s|%s> in %s", dto.URL, dto.Title, dto.Company),
 			},
 		)
 	}
