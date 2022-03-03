@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func CrawlGitPublic(c *cli.Context) error {
+func CrawlGitPublic(ctx *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	mysqlConn := os.Getenv("MYSQL_CONN")
 
@@ -24,11 +24,16 @@ func CrawlGitPublic(c *cli.Context) error {
 		return err
 	}
 
-	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
+	logger.Info("slack channel", zap.Any("channel", ctx.String("channel")))
 	repository := repository.NewRepository(logger, db)
-	gitPublicCrawler := gitpublic.NewCrawler(logger, c.String("channel"), c.String("organization"))
+	gitPublicCrawler := gitpublic.NewCrawler(logger, ctx.String("channel"), ctx.String("organization"))
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
+	m, err := toRenameMap(logger, ctx.String("renames"))
+	if err != nil {
+		logger.Error("", zap.Error(err))
+		return err
+	}
 
 	usecase := crawler.NewUseCase(
 		logger,
@@ -36,6 +41,7 @@ func CrawlGitPublic(c *cli.Context) error {
 		gitPublicCrawler,
 		client,
 		client,
+		m,
 	)
 
 	err = usecase.Work(gitPublicCrawler.GetCrawlerName(), gitPublicCrawler.GetJobName())

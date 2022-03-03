@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func CrawlSpinnaker(c *cli.Context) error {
+func CrawlSpinnaker(ctx *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	mysqlConn := os.Getenv("MYSQL_CONN")
 
@@ -24,14 +24,19 @@ func CrawlSpinnaker(c *cli.Context) error {
 		return err
 	}
 
-	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
+	logger.Info("slack channel", zap.Any("channel", ctx.String("channel")))
 	repository := repository.NewRepository(logger, db)
-	spinnakerCrawler, err := spinnaker.NewCrawler(logger, c.String("channel"), c.String("host"), c.String("token"))
+	spinnakerCrawler, err := spinnaker.NewCrawler(logger, ctx.String("channel"), ctx.String("host"), ctx.String("token"))
 	if err != nil {
 		return err
 	}
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
+	m, err := toRenameMap(logger, ctx.String("renames"))
+	if err != nil {
+		logger.Error("", zap.Error(err))
+		return err
+	}
 
 	usecase := crawler.NewUseCase(
 		logger,
@@ -39,6 +44,7 @@ func CrawlSpinnaker(c *cli.Context) error {
 		spinnakerCrawler,
 		client,
 		client,
+		m,
 	)
 
 	err = usecase.Work(spinnakerCrawler.GetCrawlerName(), spinnakerCrawler.GetJobName())

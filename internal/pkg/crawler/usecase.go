@@ -12,6 +12,8 @@ type UseCase struct {
 	crawler        Crawler
 	notifier       Notifier
 	channelService ChannelService
+
+	renameMap map[string]string
 }
 
 // TODO rename
@@ -47,7 +49,9 @@ func (u UseCase) filterEvents(crawledEvents []Event) ([]Event, error) {
 
 func (u UseCase) notify(events []Event) error {
 	for i, e := range events {
-		user, err := u.GetChannel(e.UserName)
+		name := u.rename(e.UserName)
+
+		user, err := u.GetChannel(name)
 		if err != nil {
 			return err
 		}
@@ -102,12 +106,25 @@ func (u UseCase) GetChannel(name string) (Channel, error) {
 	return c, nil
 }
 
+func (u UseCase) rename(name string) string {
+	if newName, ok := u.renameMap[name]; ok {
+		u.logger.Info(
+			"renamed",
+			zap.String("before", name),
+			zap.String("after", newName),
+		)
+		return newName
+	}
+	return name
+}
+
 func NewUseCase(
 	logger *zap.Logger,
 	repository Repository,
 	crawler Crawler,
 	notifier Notifier,
 	channelService ChannelService,
+	renameMap map[string]string,
 ) *UseCase {
 	return &UseCase{
 		logger:         logger,
@@ -115,5 +132,6 @@ func NewUseCase(
 		crawler:        crawler,
 		notifier:       notifier,
 		channelService: channelService,
+		renameMap:      renameMap,
 	}
 }

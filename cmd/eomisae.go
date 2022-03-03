@@ -59,12 +59,19 @@ func CrawlEomisae(ctx *cli.Context) error {
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
 
+	m, err := toRenameMap(logger, ctx.String("renames"))
+	if err != nil {
+		logger.Error("", zap.Error(err))
+		return err
+	}
+
 	usecase := crawler.NewUseCase(
 		logger,
 		repository,
 		eomisaeCrawler,
 		client,
 		client,
+		m,
 	)
 
 	err = usecase.Work(eomisaeCrawler.GetCrawlerName(), eomisaeCrawler.GetJobName())

@@ -55,6 +55,11 @@ func CrawlFinancialReport(ctx *cli.Context) error {
 	}
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
+	m, err := toRenameMap(logger, ctx.String("renames"))
+	if err != nil {
+		logger.Error("", zap.Error(err))
+		return err
+	}
 
 	usecase := crawler.NewUseCase(
 		logger,
@@ -62,6 +67,7 @@ func CrawlFinancialReport(ctx *cli.Context) error {
 		financialReportCrawler,
 		client,
 		client,
+		m,
 	)
 
 	err = usecase.Work(financialReportCrawler.GetCrawlerName(), financialReportCrawler.GetJobName())

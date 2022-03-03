@@ -27,6 +27,12 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 
 	logger := zapLogger()
 
+	m, err := toRenameMap(logger, ctx.String("renames"))
+	if err != nil {
+		logger.Error("", zap.Error(err))
+		return err
+	}
+
 	db, err := openMysql(mysqlConn)
 	if err != nil {
 		return err
@@ -66,6 +72,7 @@ func CrawlGroupWareDeclinedPayments(ctx *cli.Context) error {
 		groupwareCrawler,
 		client,
 		client,
+		m,
 	)
 
 	err = usecase.Work(groupwareCrawler.GetCrawlerName(), groupwareCrawler.GetJobName())

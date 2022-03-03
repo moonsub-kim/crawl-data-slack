@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func GetChannel(c *cli.Context) error {
+func GetChannel(ctx *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	postgresConn := os.Getenv("POSTGRES_CONN")
 
@@ -23,7 +23,7 @@ func GetChannel(c *cli.Context) error {
 		return err
 	}
 
-	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
+	logger.Info("slack channel", zap.Any("channel", ctx.String("channel")))
 	repository := repository.NewRepository(logger, db)
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
@@ -34,9 +34,10 @@ func GetChannel(c *cli.Context) error {
 		nil,
 		client,
 		client,
+		map[string]string{},
 	)
 
-	channel, err := usecase.GetChannel(c.String("channel"))
+	channel, err := usecase.GetChannel(ctx.String("channel"))
 	if err != nil {
 		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
 		return err

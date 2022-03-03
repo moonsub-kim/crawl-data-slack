@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
 	"github.com/urfave/cli/v2"
@@ -27,6 +28,7 @@ var Commands = []*cli.Command{
 				Flags: []cli.Flag{
 					&cli.BoolFlag{Name: "job"},
 					&cli.StringFlag{Name: "masters"},
+					&cli.StringFlag{Name: "renames"},
 				},
 				Action: CrawlGroupWareDeclinedPayments,
 			},
@@ -186,6 +188,25 @@ func migrate(db *gorm.DB) error {
 		&repository.Event{},
 		&repository.Channel{},
 	)
+}
+
+func toRenameMap(l *zap.Logger, s string) (map[string]string, error) {
+	if s == "" {
+		return map[string]string{}, nil
+	}
+
+	m := map[string]string{}
+	renames := strings.Split(s, ",")
+	for _, rename := range renames {
+		splitted := strings.Split(s, "=")
+		if len(splitted) != 2 {
+			return nil, fmt.Errorf("failed to parse rename %s", rename)
+		}
+
+		m[splitted[0]] = splitted[1]
+	}
+	l.Info("renameMap", zap.Any("map", m))
+	return m, nil
 }
 
 func openPostgres(conn string) (*gorm.DB, error) {

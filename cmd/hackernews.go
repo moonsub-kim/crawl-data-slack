@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func CrawlHackerNews(c *cli.Context) error {
+func CrawlHackerNews(ctx *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	mysqlConn := os.Getenv("MYSQL_CONN")
 
@@ -24,11 +24,16 @@ func CrawlHackerNews(c *cli.Context) error {
 		return err
 	}
 
-	logger.Info("hackernews slack channel", zap.Any("channel", c.String("channel")))
+	logger.Info("hackernews slack channel", zap.Any("channel", ctx.String("channel")))
 	repository := repository.NewRepository(logger, db)
-	hackerNewsCrawler := hackernews.NewCrawler(logger, c.String("channel"), c.Int("point_threshold"))
+	hackerNewsCrawler := hackernews.NewCrawler(logger, ctx.String("channel"), ctx.Int("point_threshold"))
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
+	m, err := toRenameMap(logger, ctx.String("renames"))
+	if err != nil {
+		logger.Error("", zap.Error(err))
+		return err
+	}
 
 	usecase := crawler.NewUseCase(
 		logger,
@@ -36,6 +41,7 @@ func CrawlHackerNews(c *cli.Context) error {
 		hackerNewsCrawler,
 		client,
 		client,
+		m,
 	)
 
 	err = usecase.Work(hackerNewsCrawler.GetCrawlerName(), hackerNewsCrawler.GetJobName())

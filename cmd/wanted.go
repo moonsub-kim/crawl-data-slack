@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func CrawlWanted(c *cli.Context) error {
+func CrawlWanted(ctx *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	postgresConn := os.Getenv("POSTGRES_CONN")
 
@@ -24,11 +24,16 @@ func CrawlWanted(c *cli.Context) error {
 		return err
 	}
 
-	logger.Info("slack channel", zap.Any("channel", c.String("channel")))
+	logger.Info("slack channel", zap.Any("channel", ctx.String("channel")))
 	repository := repository.NewRepository(logger, db)
-	wantedCrawler := wanted.NewCrawler(logger, c.String("channel"), c.String("query"))
+	wantedCrawler := wanted.NewCrawler(logger, ctx.String("channel"), ctx.String("query"))
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
+	m, err := toRenameMap(logger, ctx.String("renames"))
+	if err != nil {
+		logger.Error("", zap.Error(err))
+		return err
+	}
 
 	usecase := crawler.NewUseCase(
 		logger,
@@ -36,6 +41,7 @@ func CrawlWanted(c *cli.Context) error {
 		wantedCrawler,
 		client,
 		client,
+		m,
 	)
 
 	err = usecase.Work(wantedCrawler.GetCrawlerName(), wantedCrawler.GetJobName())
