@@ -17,7 +17,7 @@ init: ## init creates .env file to inject environment variables
 	" >> .env
 
 # Examples
-# make up cmd="crawl groupware -job declined_payments"
+# make up cmd="crawl groupware --job declined_payments"
 # make up cmd="crawl hackernews --channel CHANNEL --point_threshold 100"
 # make up cmd="crawl quasarzone --channel CHANNEL"
 # make up cmd="crawl eomisae --channel CHANNEL --target raffle"
@@ -55,7 +55,7 @@ docker-upload: ## Upload the image to the docker registry `make docker-upload ve
 # eks-rw
 # kubectx dev
 # kubens grslack
-helm-upgrade: docker-upload
+helm-upgrade:
 	@helm upgrade grslack helm/crawl-data-slack -f helm/values/values.yaml
 
 helm-template:
