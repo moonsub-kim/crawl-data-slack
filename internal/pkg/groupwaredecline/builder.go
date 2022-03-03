@@ -74,7 +74,7 @@ func (b eventBuilder) parseDrafter(drafter string) (string, error) {
 }
 
 func (b eventBuilder) parseStatus(status string) (string, string, error) {
-	re := regexp.MustCompile(`(.+)\(.+/([A-z]+) ([A-z]+)\)`) // 상태(한글이름/firstname lastname)
+	re := regexp.MustCompile(`(.+)\(.+/([A-z]+)[\. ]([A-z]+)\)`) // 상태(한글이름/firstname lastname) or 상태(한글이름/firstname.lastname)
 	groups := re.FindStringSubmatch(status)
 	if len(groups) != 4 {
 		return "", "", fmt.Errorf("failed to parse status %s", status)
