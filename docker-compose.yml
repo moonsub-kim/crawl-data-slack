@@ -52,6 +52,7 @@ services:
       - mysql_data:/var/lib/mysql
 
   postgres:
+    container_name: postgres
     image: "postgres:10.6"
     environment:
       - POSTGRES_USER=crawler
