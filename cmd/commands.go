@@ -102,12 +102,11 @@ var Commands = []*cli.Command{
 				Action: CrawlTechCrunch,
 			},
 			{
-				Name: "guardian",
+				Name: "confluent",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "channel"},
-					&cli.StringFlag{Name: "url"},
 				},
-				Action: CrawlGuardian,
+				Action: CrawlConfluent,
 			},
 		},
 	},
