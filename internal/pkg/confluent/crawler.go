@@ -43,11 +43,11 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 			function crawl() {
 				var records = [];
 				var divs = document.querySelectorAll('div#ccloud-release-notes > div.section')
-				for (var i = 0; i < divs.length; i++) {
+				for (var i = 0; i < Math.min(divs.length, 5); i++) { // 최근 5개만 확인
 					records.push(map_object(divs[i]));
 				}
 				
-				return JSON.stringify(records);
+				return JSON.stringify(records.reverse()); // 과거 릴리즈가 인덱스 앞쪽으로 하기위해 reverse
 			}
 			crawl();
 			`,
