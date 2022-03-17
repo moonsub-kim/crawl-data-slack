@@ -1,13 +1,15 @@
 package confluent
 
 import (
+	"fmt"
+
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
 
 type eventBuilder struct {
 }
 
-func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
+func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string, url string) ([]crawler.Event, error) {
 	var events []crawler.Event
 	for _, dto := range dtos {
 		events = append(
@@ -18,7 +20,7 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 				UserName: channel,
 				UID:      dto.Date,
 				Name:     dto.Date,
-				Message:  dto.Content,
+				Message:  fmt.Sprintf("%s\n<%s|RELEASE NOTE>", dto.Content, url),
 			},
 		)
 	}
