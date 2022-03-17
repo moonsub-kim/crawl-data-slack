@@ -1,19 +1,21 @@
 package confluent
 
 import (
-	"strings"
+	"context"
+	"encoding/json"
+	"time"
 
-	"github.com/anaskhan96/soup"
+	"github.com/chromedp/chromedp"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"go.uber.org/zap"
 )
 
 type Crawler struct {
 	logger       *zap.Logger
+	ctx          context.Context
 	eventBuilder eventBuilder
 
-	channel      string
-	organization string
+	channel string
 }
 
 const URL string = "https://docs.confluent.io/cloud/current/release-notes/index.html"
@@ -22,22 +24,43 @@ func (c Crawler) GetCrawlerName() string { return "confluent" }
 func (c Crawler) GetJobName() string     { return "release" }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
-	res, err := soup.Get(URL)
+	var jsonBody string
+	var dtos []DTO
+
+	err := chromedp.Run(
+		c.ctx,
+		chromedp.Navigate(URL),
+		chromedp.Sleep(time.Second*2),
+		chromedp.EvaluateAsDevTools(
+			`
+			function map_object(div) {
+				return {
+					"date": div.querySelector('h2').innerText,
+					"content": div.innerText,
+				};
+			}
+
+			function crawl() {
+				var records = [];
+				var divs = document.querySelectorAll('div#ccloud-release-notes > div.section')
+				for (var i = 0; i < divs.length; i++) {
+					records.push(map_object(divs[i]));
+				}
+				
+				return JSON.stringify(records);
+			}
+			crawl();
+			`,
+			&jsonBody,
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	doc := soup.HTMLParse(res)
-	divs := doc.Find("div", "id", "ccloud-release-notes").FindAll("div", "class", "section")
-	var dtos []DTO
-	for _, div := range divs[:5] { // 최근5개만 확인
-		date := div.Find("h2").Text()
-		content := div.Text()
-
-		dtos = append(dtos, DTO{
-			Date:    strings.TrimSpace(date),
-			Content: strings.TrimSpace(content),
-		})
+	err = json.Unmarshal([]byte(jsonBody), &dtos)
+	if err != nil {
+		return nil, err
 	}
 
 	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
@@ -53,9 +76,11 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return events, nil
 }
 
-func NewCrawler(logger *zap.Logger, channel string) *Crawler {
+func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string) *Crawler {
 	return &Crawler{
-		logger:  logger,
+		logger: logger,
+		ctx:    chromectx,
+
 		channel: channel,
 	}
 }

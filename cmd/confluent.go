@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"os"
 	"reflect"
 
+	"github.com/chromedp/chromedp"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/confluent"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
@@ -16,6 +19,7 @@ import (
 func CrawlConfluent(ctx *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	mysqlConn := os.Getenv("MYSQL_CONN")
+	chromeHost := os.Getenv("CHROME_HOST")
 
 	logger := zapLogger()
 
@@ -24,9 +28,26 @@ func CrawlConfluent(ctx *cli.Context) error {
 		return err
 	}
 
+	url, err := getChromeURL(logger, chromeHost)
+	if err != nil {
+		return err
+	}
+	logger.Info("chrome url", zap.String("url", url))
+
+	devtoolsWSURL := flag.String("devtools-ws-url", url, "DevTools Websocket URL")
+	allocatorctx, cancel := chromedp.NewRemoteAllocator(context.Background(), *devtoolsWSURL)
+	defer cancel()
+
+	chromectx, cancel := chromedp.NewContext(
+		allocatorctx,
+		// chromedp.WithLogf(log.Printf),
+		// chromedp.WithDebugf(log.Printf),
+	)
+	defer cancel()
+
 	logger.Info("slack channel", zap.Any("channel", ctx.String("channel")))
 	repository := repository.NewRepository(logger, db)
-	confluentCrawler := confluent.NewCrawler(logger, ctx.String("channel"))
+	confluentCrawler := confluent.NewCrawler(logger, chromectx, ctx.String("channel"))
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
 	m, err := toRenameMap(logger, ctx.String("renames"))
