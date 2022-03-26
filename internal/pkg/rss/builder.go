@@ -16,6 +16,13 @@ type eventBuilder struct {
 func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName, jobName string, filters []Filter, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event
 
+	optionalString := func(s string) string {
+		if s == "" {
+			return ""
+		}
+		return fmt.Sprintf("(%s)", s)
+	}
+
 	for _, i := range feed.Items {
 		if b.filter(filters, i) {
 			continue
@@ -30,12 +37,11 @@ func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName, jobName string
 				UID:      i.Title,
 				Name:     i.Title,
 				Message: fmt.Sprintf(
-					"[%v] %s <%s|%s>\n(%s)",
+					"[%v] <%s|%s>\n(%s)",
 					i.PublishedParsed.Format(iso8601Format),
-					jobName,
 					i.Link,
 					i.Title,
-					strings.Join(i.Categories, ", "),
+					optionalString(strings.Join(i.Categories, ", ")),
 				),
 			},
 		)
