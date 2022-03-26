@@ -23,6 +23,11 @@ func (u UseCase) Work(crawler string, job string) error {
 		return err
 	}
 
+	u.logger.Info(
+		"work",
+		zap.Any("events", crawledEvents),
+	)
+
 	events, err := u.filterEvents(crawledEvents)
 	if err != nil {
 		return err

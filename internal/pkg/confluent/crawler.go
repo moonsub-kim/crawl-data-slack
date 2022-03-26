@@ -63,17 +63,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 
-	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel, URL)
-	if err != nil {
-		return nil, err
-	}
-
-	c.logger.Info(
-		"crawler",
-		// zap.Any("dto", dtos),
-		zap.Any("events", events),
-	)
-	return events, nil
+	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel, URL)
 }
 
 func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string) *Crawler {

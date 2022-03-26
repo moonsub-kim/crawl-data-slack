@@ -56,11 +56,6 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		events = append(events, pipelineEvents...)
 	}
 
-	c.logger.Info(
-		"events",
-		zap.Any("events", events),
-	)
-
 	return events, nil
 }
 

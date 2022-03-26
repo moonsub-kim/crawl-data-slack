@@ -119,12 +119,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 
 	c.logger.Info("dto", zap.Any("dto", dtos))
-	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
-	if err != nil {
-		return nil, err
-	}
-
-	return events, nil
+	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
 }
 
 func (c Crawler) createLinkActions(link string, body *string) []chromedp.Action {

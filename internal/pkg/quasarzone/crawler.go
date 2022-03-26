@@ -37,17 +37,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		dtos = append(dtos, results...)
 	}
 
-	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
-	if err != nil {
-		return nil, err
-	}
-
-	c.logger.Info(
-		"crawler",
-		// zap.Any("dto", dtos),
-		zap.Any("events", events),
-	)
-	return events, nil
+	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
 }
 
 func (c Crawler) crawlFor(url string) ([]DTO, error) {

@@ -52,17 +52,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 	c.logger.Info("targets", zap.Any("targets", targets))
 
-	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
-	if err != nil {
-		return nil, err
-	}
-
-	c.logger.Info(
-		"events",
-		zap.Any("events", events),
-	)
-
-	return events, nil
+	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
 }
 
 func (c Crawler) nextPageActions(i int) []chromedp.Action {

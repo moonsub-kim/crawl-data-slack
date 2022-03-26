@@ -33,9 +33,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 
-	events := c.eventBuilder.buildEvents(root.Props.PageProps.IPOMonthlyList, c.GetCrawlerName(), c.GetJobName(), c.channel)
-	c.logger.Info("events", zap.Any("events", events))
-	return events, nil
+	return c.eventBuilder.buildEvents(root.Props.PageProps.IPOMonthlyList, c.GetCrawlerName(), c.GetJobName(), c.channel), nil
 }
 
 func NewCrawler(logger *zap.Logger, channel string) *Crawler {

@@ -52,17 +52,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		})
 	}
 
-	events, err := c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel, c.filters)
-	if err != nil {
-		return nil, err
-	}
-
-	c.logger.Info(
-		"crawler",
-		zap.Any("dto", dtos),
-		zap.Any("events", events),
-	)
-	return events, nil
+	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel, c.filters)
 }
 
 func NewCrawler(logger *zap.Logger, channel string, pointThreshold int) *Crawler {
