@@ -23,8 +23,9 @@ func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName, jobName string
 		return fmt.Sprintf("(%s)", s)
 	}
 
-	for _, i := range feed.Items {
-		if b.filter(filters, i) {
+	for i := len(feed.Items) - 1; i >= 0; i-- {
+		item := feed.Items[i]
+		if b.filter(filters, item) {
 			continue
 		}
 
@@ -34,14 +35,14 @@ func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName, jobName string
 				Crawler:  crawlerName,
 				Job:      jobName,
 				UserName: channel,
-				UID:      i.Title,
-				Name:     i.Title,
+				UID:      item.Title,
+				Name:     item.Title,
 				Message: fmt.Sprintf(
 					"[%v] <%s|%s>\n(%s)",
-					i.PublishedParsed.Format(iso8601Format),
-					i.Link,
-					i.Title,
-					optionalString(strings.Join(i.Categories, ", ")),
+					item.PublishedParsed.Format(iso8601Format),
+					item.Link,
+					item.Title,
+					optionalString(strings.Join(item.Categories, ", ")),
 				),
 			},
 		)

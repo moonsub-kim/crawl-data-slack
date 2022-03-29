@@ -2,6 +2,7 @@ package rss
 
 import (
 	"strings"
+	"time"
 
 	"github.com/mmcdole/gofeed"
 )
@@ -74,6 +75,25 @@ func WithURLMustContainsFilter(keywords []string) CrawlerOption {
 		c.filters = append(
 			c.filters,
 			&urlMustContainsFilter{keywords: keywords},
+		)
+	}
+}
+
+type recentFilter struct {
+	filter
+
+	time time.Time
+}
+
+func (f *recentFilter) Filter(item *gofeed.Item) bool {
+	return item.PublishedParsed.Before(f.time)
+}
+
+func WithRecentFilter(t time.Time) CrawlerOption {
+	return func(c *Crawler) {
+		c.filters = append(
+			c.filters,
+			&recentFilter{time: t},
 		)
 	}
 }
