@@ -109,6 +109,7 @@ var Commands = []*cli.Command{
 				Action: CrawlConfluent,
 			},
 			commandRSS,
+			commandSlackEngineering,
 		},
 	},
 	{
