@@ -86,7 +86,7 @@ type recentFilter struct {
 }
 
 func (f *recentFilter) Filter(item *gofeed.Item) bool {
-	return item.PublishedParsed.Before(f.time)
+	return item.PublishedParsed != nil && item.PublishedParsed.Before(f.time)
 }
 
 func WithRecentFilter(t time.Time) CrawlerOption {

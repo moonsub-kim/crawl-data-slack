@@ -3,6 +3,7 @@ package rss
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/mmcdole/gofeed"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
@@ -23,6 +24,13 @@ func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName, jobName string
 		return fmt.Sprintf("(%s)", s)
 	}
 
+	optionalTime := func(t *time.Time) string {
+		if t == nil {
+			return ""
+		}
+		return fmt.Sprintf("[%v] ", t.Format(iso8601Format))
+	}
+
 	for i := len(feed.Items) - 1; i >= 0; i-- {
 		item := feed.Items[i]
 		if b.filter(filters, item) {
@@ -38,8 +46,8 @@ func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName, jobName string
 				UID:      item.Title,
 				Name:     item.Title,
 				Message: fmt.Sprintf(
-					"[%v] <%s|%s>\n%s",
-					item.PublishedParsed.Format(iso8601Format),
+					"%s<%s|%s>\n%s",
+					optionalTime(item.PublishedParsed),
 					item.Link,
 					item.Title,
 					optionalString(strings.Join(item.Categories, ", ")),
