@@ -1,11 +1,13 @@
 package financialreport
 
 import (
+	"bytes"
 	"context"
-	"fmt"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
 	"time"
 
-	"github.com/chromedp/chromedp"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"go.uber.org/zap"
 )
@@ -18,121 +20,44 @@ type Crawler struct {
 	channel string
 }
 
-const URL string = "https://globalmonitor.einfomax.co.kr/ht_usa.html#/3/01"
-const CONTENTS int = 10
-const SCAN_PAGES int = 5
+// const URL string = "https://globalmonitor.einfomax.co.kr/ht_usa.html#/3/01"
+const URL string = "https://globalmonitor.einfomax.co.kr/bizrpt/reportlist"
 
 func (c Crawler) GetCrawlerName() string { return "financial-report" }
 func (c Crawler) GetJobName() string     { return "einfomax" }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
-	dtos := make([]DTO, CONTENTS*SCAN_PAGES)
-	var actions []chromedp.Action
-	for i := 0; i < SCAN_PAGES; i++ {
-		for j := 0; j < CONTENTS; j++ {
-			actions = append(actions, c.crawlActions(URL, j, &dtos[i*CONTENTS+j])...)
-		}
-		nextPage := i + 1
-		actions = append(actions, c.nextPageActions(nextPage)...)
-	}
-
-	err := chromedp.Run(
-		c.ctx,
-		actions...,
-	)
+	ReqBody := NewRequestBody(time.Now().AddDate(0, 0, -3), time.Now().AddDate(0, 0, 1))
+	body, err := json.Marshal(ReqBody)
 	if err != nil {
-		c.logger.Error("run error", zap.Error(err))
 		return nil, err
 	}
 
-	targets, err := chromedp.Targets(c.ctx)
+	buf := bytes.NewBuffer(body)
+
+	res, err := http.Post(URL, "application/json", buf)
 	if err != nil {
-		c.logger.Error("retrieving targets error", zap.Error(err))
 		return nil, err
 	}
-	c.logger.Info("targets", zap.Any("targets", targets))
+	defer res.Body.Close()
 
-	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
-}
-
-func (c Crawler) nextPageActions(i int) []chromedp.Action {
-	pageIndex := i + 1 // 버튼이 < 1 2 3 4 5 6 8 9 10 > 총 12개임.
-	return []chromedp.Action{
-		chromedp.Evaluate(fmt.Sprintf("document.querySelectorAll('div.paging-area > a')[%d].click()", pageIndex), nil),
-		chromedp.Sleep(time.Second * 1),
+	resBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
 	}
-}
 
-func (c Crawler) crawlActions(link string, j int, dto *DTO) []chromedp.Action {
-	return []chromedp.Action{
-		chromedp.Navigate(link),
-		chromedp.Sleep(time.Second * 1),
-		chromedp.Evaluate(
-			fmt.Sprintf(
-				`
-				function pdfTab(tdPDF) {
-					tdPDF.querySelector('a').click();
-				}
-				
-				function getText(tdTitle) {
-					tdTitle.querySelector('a').click(); // 창 열기
-					text = document.querySelector('div.ng-binding').innerText;
-					document.querySelectorAll('div.right > a.cursor')[1].click(); // 창 닫기
-					return text;
-				}
-
-				function mapObject(tr) {
-					tds = tr.querySelectorAll('td');
-					pdfTab(tds[2]);
-
-					return {
-						'date': tds[0].innerText, // YYYY/MM/DD format
-						'title': tds[1].innerText,
-						'text': getText(tds[1]),
-						'company': tds[3].innerText,
-					}
-				}
-				
-				function main() {
-					var trs = document.querySelectorAll('table.report-table > tbody > tr');
-					return mapObject(trs[%d]);
-				}
-
-				main()
-				`,
-				j,
-			),
-			dto,
-		),
-		chromedp.ActionFunc(func(ctx context.Context) error {
-			targets, err := chromedp.Targets(ctx)
-			if err != nil {
-				c.logger.Info("Targets", zap.Error((err)))
-				return err
-			}
-
-			for _, t := range targets {
-				if t.URL == "about:blank" || t.URL == URL {
-					continue
-				}
-				if !t.Attached {
-					dto.PDFURL = t.URL
-					newCtx, _ := chromedp.NewContext(ctx, chromedp.WithTargetID(t.TargetID))
-					if err := chromedp.Run(newCtx, chromedp.Sleep(time.Millisecond*100)); err != nil {
-						c.logger.Error("run err", zap.Error(err))
-					}
-				}
-			}
-			return nil
-		}),
+	var dto DTO
+	err = json.Unmarshal(resBody, &dto)
+	if err != nil {
+		return nil, err
 	}
+
+	return c.eventBuilder.buildEvents(dto, c.GetCrawlerName(), c.GetJobName(), c.channel)
 }
 
-func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string) (*Crawler, error) {
+func NewCrawler(logger *zap.Logger, channel string) (*Crawler, error) {
 	return &Crawler{
-		logger: logger,
-		ctx:    chromectx,
-
+		logger:  logger,
 		channel: channel,
 	}, nil
 }

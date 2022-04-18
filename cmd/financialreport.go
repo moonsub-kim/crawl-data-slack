@@ -1,13 +1,9 @@
 package main
 
 import (
-	"context"
-	"flag"
-	"log"
 	"os"
 	"reflect"
 
-	"github.com/chromedp/chromedp"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/financialreport"
@@ -21,7 +17,6 @@ import (
 func CrawlFinancialReport(ctx *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	postgresConn := os.Getenv("POSTGRES_CONN")
-	chromeHost := os.Getenv("CHROME_HOST")
 
 	logger := zapLogger()
 
@@ -30,25 +25,8 @@ func CrawlFinancialReport(ctx *cli.Context) error {
 		return err
 	}
 
-	url, err := getChromeURL(logger, chromeHost)
-	if err != nil {
-		return err
-	}
-	logger.Info("chrome url", zap.String("url", url))
-
-	devtoolsWSURL := flag.String("devtools-ws-url", url, "DevTools Websocket URL")
-	allocatorctx, cancel := chromedp.NewRemoteAllocator(context.Background(), *devtoolsWSURL)
-	defer cancel()
-
-	chromectx, cancel := chromedp.NewContext(
-		allocatorctx,
-		chromedp.WithLogf(log.Printf),
-		// chromedp.WithDebugf(log.Printf),
-	)
-	defer cancel()
-
 	repository := repository.NewRepository(logger, db)
-	financialReportCrawler, err := financialreport.NewCrawler(logger, chromectx, ctx.String("channel"))
+	financialReportCrawler, err := financialreport.NewCrawler(logger, ctx.String("channel"))
 	if err != nil {
 		logger.Error("init crawler", zap.Error((err)))
 		return err

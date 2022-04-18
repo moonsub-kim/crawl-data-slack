@@ -9,18 +9,18 @@ import (
 type eventBuilder struct {
 }
 
-func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
+func (b eventBuilder) buildEvents(dto DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event
-	for _, dto := range dtos {
+	for _, report := range dto.ReportList {
 		events = append(
 			events,
 			crawler.Event{
 				Crawler:  crawlerName,
 				Job:      jobName,
 				UserName: channel,
-				UID:      dto.Title,
+				UID:      report.Title,
 				Name:     jobName,
-				Message:  b.buildMessage(dto),
+				Message:  b.buildMessage(report),
 			},
 		)
 	}
@@ -28,14 +28,14 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 	return events, nil
 }
 
-func (b eventBuilder) buildMessage(dto DTO) string {
+func (b eventBuilder) buildMessage(report Report) string {
 	return fmt.Sprintf(
 		"*%s*\n%s %s, <%s|PDF 보기>\n> %s",
-		dto.Title,
-		dto.Company,
-		dto.Date,
-		dto.PDFURL,
-		dto.Text,
+		report.Title,
+		report.Company,
+		report.Date,
+		fmt.Sprintf("https://rreport.einfomax.co.kr/report/%s/pdf", report.ID),
+		report.Text,
 	)
 	// m := map[string]interface{}{
 	// 	"blocks": []slack.Block{
