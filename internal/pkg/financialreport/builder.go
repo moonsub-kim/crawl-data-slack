@@ -34,7 +34,7 @@ func (b eventBuilder) buildMessage(report Report) string {
 		report.Title,
 		report.Company,
 		report.Date,
-		fmt.Sprintf("https://rreport.einfomax.co.kr/report/%s/pdf", report.ID),
+		fmt.Sprintf("https://rreport.einfomax.co.kr/report/%s.pdf", report.ID),
 		report.Text,
 	)
 	// m := map[string]interface{}{
