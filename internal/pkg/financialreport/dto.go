@@ -69,7 +69,7 @@ func NewRequestBody(startDate time.Time, endDate time.Time) RequestBody {
 
 		Cmd:       "rl_011",
 		StartDate: startDate.Format("2006-01-02"),
-		EndDate:   startDate.Format("2006-01-02"),
+		EndDate:   endDate.Format("2006-01-02"),
 
 		SearchItem: "title",
 	}
