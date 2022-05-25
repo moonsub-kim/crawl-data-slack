@@ -27,6 +27,12 @@ const GET_APPS_URL string = "%s/applications"                          // c.host
 const GET_CONFIGS_URL string = "%s/applications/%s/pipelineConfigs"    // c.host, application
 const GOTO_URL string = "%s/#/applications/%s/executions/configure/%s" // c.host, application, pipeline_id
 
+var IGNORE_BRANCHES map[string]struct{} = map[string]struct{}{
+	"":       {},
+	"master": {},
+	"${trigger['payload']['deployment']['sha']}": {},
+}
+
 func (c Crawler) GetCrawlerName() string { return "spinnaker" }
 func (c Crawler) GetJobName() string     { return "values-branch" }
 
@@ -109,7 +115,7 @@ func (c Crawler) validatePipeline(pipelines []Pipeline) ([]crawler.Event, error)
 			continue
 		}
 
-		if branch != "master" && branch != "" {
+		if _, ok := IGNORE_BRANCHES[branch]; !ok {
 			events = append(
 				events,
 				crawler.Event{
@@ -119,7 +125,7 @@ func (c Crawler) validatePipeline(pipelines []Pipeline) ([]crawler.Event, error)
 					UID:      p.Name,
 					Name:     time.Now().String(),
 					Message: fmt.Sprintf(
-						"Pipeline '%s' of the App '%s' values branch is not `master` branch but `%s`.\n<%s|go to the pipeline>",
+						"[Spinnaker] '%s' of the Application '%s' values has a user branch `%s`.\n <%s|go to the pipeline>",
 						p.Name,
 						p.Application,
 						branch,
