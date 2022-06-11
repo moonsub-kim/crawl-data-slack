@@ -21,7 +21,6 @@ func (c Crawler) GetCrawlerName() string { return "slack-engineering" }
 func (c Crawler) GetJobName() string     { return "post" }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
-	c.logger.Info("gogo")
 	res, err := soup.Get(URL)
 	if err != nil {
 		return nil, err

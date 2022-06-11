@@ -110,6 +110,7 @@ var Commands = []*cli.Command{
 			},
 			commandRSS,
 			commandSlackEngineering,
+			commandShopifyEngineering,
 		},
 	},
 	{

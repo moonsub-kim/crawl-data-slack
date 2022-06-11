@@ -1,4 +1,4 @@
-package eomisae
+package shopifyengineering
 
 import (
 	"fmt"
@@ -12,15 +12,19 @@ type eventBuilder struct {
 func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event
 	for _, dto := range dtos {
+		name := dto.Name
+		if len(name) > 64 {
+			name = name[:64]
+		}
 		events = append(
 			events,
 			crawler.Event{
 				Crawler:  crawlerName,
 				Job:      jobName,
 				UserName: channel,
-				UID:      dto.URL,
-				Name:     jobName,
-				Message:  fmt.Sprintf("<%s|%s>\n%s\n%s", dto.Post, dto.Name, dto.URL, dto.Content),
+				UID:      name,
+				Name:     name,
+				Message:  fmt.Sprintf("[%s] Shopify <%s|%s>", dto.Date, dto.URL, dto.Name),
 			},
 		)
 	}

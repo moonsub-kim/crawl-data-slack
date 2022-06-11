@@ -21,6 +21,7 @@ init: ## init creates .env file to inject environment variables
 # make up cmd="crawl hackernews --channel CHANNEL --point_threshold 100"
 # make up cmd="crawl quasarzone --channel CHANNEL"
 # make up cmd="crawl eomisae --channel CHANNEL --target raffle"
+# make up cmd="crawl eomisae --channel CHANNEL --target fashion"
 # make up cmd="crawl financial-report --channel CHANNEL"
 # make up cmd="crawl gitpublic --channel CHANNEL"
 # make up cmd="crawl ipo --channel CHANNEL"
@@ -29,6 +30,7 @@ init: ## init creates .env file to inject environment variables
 # make up cmd="crawl wanted --channel CHANNEL --query \"SEARCH_STRING\""
 # make up cmd="crawl techcrunch --channel CHANNEL"
 # make up cmd="crawl confluent --channel CHANNEL"
+# make up cmd="crawl rss --channel geeknews --name spotify --site 'https://engineering.atspotify.com/feed/' --recent-days 20"
 up: ## Run the application `make up cmd="crawl financial-report --channel my_channel"`, open the Makefile to see more examples.
 	@docker-compose build app
 	@COMMAND="$(cmd)" docker-compose up app

@@ -1,16 +1,13 @@
 package main
 
 import (
-	"context"
 	"errors"
-	"flag"
 	"os"
 	"reflect"
 
-	"github.com/chromedp/chromedp"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
-	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/eomisae"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/shopifyengineering"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/slackclient"
 	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
@@ -18,16 +15,22 @@ import (
 	"gorm.io/gorm"
 )
 
-// CrawlEomisae crawls declied payments from groupware and notify the events
-func CrawlEomisae(ctx *cli.Context) error {
-	id := os.Getenv("EOMISAE_ID")
-	pw := os.Getenv("EOMISAE_PW")
+var (
+	shopifyEngineeringFlagNameChannel string = "channel"
+
+	commandShopifyEngineering *cli.Command = &cli.Command{
+		Name: "shopify-engineering",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: shopifyEngineeringFlagNameChannel, Required: true},
+		},
+		Action: crawlShopifyEngineering,
+	}
+)
+
+func crawlShopifyEngineering(ctx *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
-	mysqlConn := os.Getenv("MYSQL_CONN")
 	postgresConn := os.Getenv("POSTGRES_CONN")
-	chromeHost := os.Getenv("CHROME_HOST")
-	channel := ctx.String("channel")
-	target := ctx.String("target")
+	mysqlConn := os.Getenv("MYSQL_CONN")
 
 	logger := zapLogger()
 
@@ -48,32 +51,22 @@ func CrawlEomisae(ctx *cli.Context) error {
 		return err
 	}
 
-	url, err := getChromeURL(logger, chromeHost)
-	if err != nil {
-		return err
-	}
-	logger.Info("chrome url", zap.String("url", url))
-
-	devtoolsWSURL := flag.String("devtools-ws-url", url, "DevTools Websocket URL")
-	allocatorctx, cancel := chromedp.NewRemoteAllocator(context.Background(), *devtoolsWSURL)
-	defer cancel()
-
-	chromectx, cancel := chromedp.NewContext(
-		allocatorctx,
-		// chromedp.WithLogf(log.Printf),
-		// chromedp.WithDebugf(log.Printf),
+	logger.Info(
+		"args",
+		zap.Any(shopifyEngineeringFlagNameChannel, ctx.String(shopifyEngineeringFlagNameChannel)),
 	)
-	defer cancel()
+
+	rssCrawler := shopifyengineering.NewCrawler(
+		logger,
+		ctx.String(rssFlagNameChannel),
+	)
+
+	events, err := rssCrawler.Crawl()
+	logger.Info("result", zap.Any("events", events), zap.Error(err))
 
 	repository := repository.NewRepository(logger, db)
-	eomisaeCrawler, err := eomisae.NewCrawler(logger, chromectx, channel, target, id, pw)
-	if err != nil {
-		logger.Error("", zap.Error(err))
-		return err
-	}
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
-
 	m, err := toRenameMap(logger, ctx.String("renames"))
 	if err != nil {
 		logger.Error("", zap.Error(err))
@@ -83,13 +76,13 @@ func CrawlEomisae(ctx *cli.Context) error {
 	usecase := crawler.NewUseCase(
 		logger,
 		repository,
-		eomisaeCrawler,
+		rssCrawler,
 		client,
 		client,
 		m,
 	)
 
-	err = usecase.Work(eomisaeCrawler.GetCrawlerName(), eomisaeCrawler.GetJobName())
+	err = usecase.Work(rssCrawler.GetCrawlerName(), rssCrawler.GetJobName())
 	if err != nil {
 		logger.Error("Work Error", zap.Error(err), zap.String("type", reflect.TypeOf(err).String()))
 		return err
