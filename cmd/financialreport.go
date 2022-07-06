@@ -20,6 +20,11 @@ func CrawlFinancialReport(ctx *cli.Context) error {
 
 	logger := zapLogger()
 
+    logger.Info(
+        "args",
+        zap.Any("channel", ctx.String("channel")),
+    )
+
 	db, err := openPostgres(postgresConn)
 	if err != nil {
 		return err

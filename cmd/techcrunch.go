@@ -24,7 +24,7 @@ func CrawlTechCrunch(ctx *cli.Context) error {
 		return err
 	}
 
-	logger.Info("slack channel", zap.Any("channel", ctx.String("channel")))
+	logger.Info("args", zap.Any("channel", ctx.String("channel")))
 	repository := repository.NewRepository(logger, db)
 	techCrunchCrawler := techcrunch.NewCrawler(logger, ctx.String("channel"))
 	api := slack.New(slackBotToken)

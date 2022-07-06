@@ -19,13 +19,12 @@ func CrawlIPO(ctx *cli.Context) error {
 
 	logger := zapLogger()
 
-	logger.Info("conn", zap.Any("con", postgresConn))
 	db, err := openPostgres(postgresConn)
 	if err != nil {
 		return err
 	}
 
-	logger.Info("slack channel", zap.Any("channel", ctx.String("channel")))
+	logger.Info("args", zap.Any("channel", ctx.String("channel")))
 	repository := repository.NewRepository(logger, db)
 	ipoCrawler := ipo.NewCrawler(logger, ctx.String("channel"))
 	api := slack.New(slackBotToken)

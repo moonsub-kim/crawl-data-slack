@@ -22,8 +22,6 @@ services:
       - POSTGRES_CONN=${POSTGRES_CONN:-host=postgres user=crawler password=crawler dbname=crawler port=5432 sslmode=disable}
       - CHROME_HOST=chrome:9222
       # - CHROME_LOG_LEVEL=DEBUG
-    volumes:
-      - ./data/:/app/data/
     depends_on:
      - db
      - chrome
