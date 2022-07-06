@@ -24,7 +24,11 @@ func CrawlWanted(ctx *cli.Context) error {
 		return err
 	}
 
-	logger.Info("slack channel", zap.Any("channel", ctx.String("channel")))
+	logger.Info(
+        "args",
+        zap.Any("channel", ctx.String("channel")),
+        zap.Any("query", ctx.String("query")),
+    )
 	repository := repository.NewRepository(logger, db)
 	wantedCrawler := wanted.NewCrawler(logger, ctx.String("channel"), ctx.String("query"))
 	api := slack.New(slackBotToken)

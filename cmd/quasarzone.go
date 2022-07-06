@@ -23,8 +23,11 @@ func CrawlQuasarZoneSales(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	logger.Info(
+        "args",
+        zap.Any("channel", ctx.String("channel")),
+    )
 
-	logger.Info("slack channel", zap.Any("channel", ctx.String("channel")))
 	repository := repository.NewRepository(logger, db)
 	quasarZoneCrawler := quasarzone.NewCrawler(logger, ctx.String("channel"))
 	api := slack.New(slackBotToken)
