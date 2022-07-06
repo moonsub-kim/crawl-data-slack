@@ -20,25 +20,17 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 				UserName: channel,
 				UID:      d.ID,
 				Name:     d.Title,
-				Message:  b.buildMessage(d),
+				Message: fmt.Sprintf(
+					"*%s*\n%s %s, <%s|원문 보기>\n> %s",
+					d.Title,
+					"미래에셋증권",
+					d.Date,
+					d.URL,
+					d.Content,
+				),
 			},
 		)
 	}
 
 	return events
-}
-
-func (b eventBuilder) buildMessage(d DTO) string {
-	pdf := ""
-	if d.pdfURL != nil {
-		pdf = fmt.Sprintf(", <%s|PDF 보기>", *d.pdfURL)
-	}
-	return fmt.Sprintf(
-		"*%s*\n%s %s%s\n> %s",
-		d.Title,
-		"미래에셋증권",
-		d.Date,
-		pdf,
-		d.Content,
-	)
 }

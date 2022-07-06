@@ -57,7 +57,8 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 			ID:      id,
 			Date:    date,
 			Title:   title,
-			pdfURL:  &pdfURL,
+			pdfURL:  pdfURL,
+			URL:     contentURL,
 			Content: content,
 		})
 	}
