@@ -74,7 +74,7 @@ func (c Crawler) parseContent(contentURL string) (string, error) {
 
 	doc := soup.HTMLParse(res)
 	m := regexp.MustCompile(`\n+`)
-	return m.ReplaceAllString(doc.Find("div", "id", "messageContentsDiv").FullText(), "\n"), nil
+	return m.ReplaceAllString(doc.Find("div", "id", "messageContentsDiv").FullText(), "\n> "), nil
 }
 
 func NewCrawler(logger *zap.Logger, channel string) *Crawler {
