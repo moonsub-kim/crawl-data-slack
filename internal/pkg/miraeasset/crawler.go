@@ -73,8 +73,74 @@ func (c Crawler) parseContent(contentURL string) (string, error) {
 	}
 
 	doc := soup.HTMLParse(res)
+	div := doc.Find("div", "id", "messageContentsDiv")
+
+	table := div.Find("table")
+	var tabletxt string
+	if table.Error == nil {
+		div.Pointer.RemoveChild(table.Pointer)
+		tabletxt = c.buildTable(table)
+	}
+
 	m := regexp.MustCompile(`\n+`)
-	return m.ReplaceAllString(doc.Find("div", "id", "messageContentsDiv").FullText(), "\n> "), nil
+	text := m.ReplaceAllString("> "+div.FullText(), "\n> ")
+	if tabletxt != "" {
+		text += "```\n" + tabletxt + "```"
+	}
+
+	return text, nil
+}
+
+func (c Crawler) buildTable(table soup.Root) string {
+	grid := [][]string{}
+	fmt.Println(table.HTML())
+
+	ths := table.FindAll("th")
+	rows := table.FindAll("tr")
+
+	grid = append(grid, []string{})
+	for _, th := range ths {
+		grid[len(grid)-1] = append(grid[len(grid)-1], th.Text())
+	}
+
+	for _, row := range rows {
+		tds := row.FindAll("td")
+		if len(tds) == len(ths) {
+			grid = append(grid, []string{})
+		} else {
+			continue
+		}
+		for _, td := range tds {
+			grid[len(grid)-1] = append(grid[len(grid)-1], td.Text())
+			fmt.Printf("append %s", td.Text())
+		}
+	}
+
+	fmt.Println(grid)
+
+	for j := 0; j < len(ths); j++ { // col
+		// get max
+		maxLen := 0
+		for i := 0; i < len(grid); i++ { // row
+			if maxLen < len(grid[i][j]) {
+				maxLen = len(grid[i][j])
+			}
+		}
+		maxLen += 1
+
+		// padding
+		for i := 0; i < len(grid); i++ {
+			grid[i][j] = fmt.Sprintf(fmt.Sprintf("%%-%ds", maxLen-len(grid[i][j])), grid[i][j])
+		}
+	}
+
+	txt := ""
+	for i := 0; i < len(grid); i++ {
+		s := strings.Join(grid[i], " | ")
+		txt += s + "\n"
+	}
+
+	return txt
 }
 
 func NewCrawler(logger *zap.Logger, channel string) *Crawler {
