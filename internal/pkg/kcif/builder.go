@@ -1,0 +1,40 @@
+package financialreport
+
+import (
+	"fmt"
+
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
+)
+
+type eventBuilder struct {
+}
+
+func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
+	var events []crawler.Event
+	for _, dto := range dtos {
+		events = append(
+			events,
+			crawler.Event{
+				Crawler:  crawlerName,
+				Job:      jobName,
+				UserName: channel,
+				UID:      dto.Title,
+				Name:     jobName,
+				Message:  b.buildMessage(dto),
+			},
+		)
+	}
+
+	return events, nil
+}
+
+func (b eventBuilder) buildMessage(dto DTO) string {
+	return fmt.Sprintf(
+		"*%s*\n%s %s, <%s|PDF 보기>\n> %s",
+		dto.Type,
+		dto.Title,
+		dto.Date,
+		dto.PDFURL,
+		dto.Text,
+	)
+}
