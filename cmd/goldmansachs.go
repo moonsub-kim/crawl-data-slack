@@ -7,8 +7,8 @@ import (
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/goldmansachs"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/slackclient"
-	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/slackengineering"
 	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -16,18 +16,20 @@ import (
 )
 
 var (
-	slackEngineeringFlagNameChannel string = "channel"
+	goldmanSachsFlagNameChannel    string = "channel"
+	goldmanSachsFlagNameRecentDays string = "recent-days"
 
-	commandSlackEngineering *cli.Command = &cli.Command{
-		Name: "slack-engineering",
+	commandGoldmanSachs *cli.Command = &cli.Command{
+		Name: "goldman-sachs",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: slackEngineeringFlagNameChannel, Required: true},
+			&cli.StringFlag{Name: goldmanSachsFlagNameChannel, Required: true},
+			&cli.IntFlag{Name: goldmanSachsFlagNameRecentDays, Required: false},
 		},
-		Action: crawlSlackEngineering,
+		Action: crawlGoldmanSachs,
 	}
 )
 
-func crawlSlackEngineering(ctx *cli.Context) error {
+func crawlGoldmanSachs(ctx *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	postgresConn := os.Getenv("POSTGRES_CONN")
 	mysqlConn := os.Getenv("MYSQL_CONN")
@@ -53,12 +55,14 @@ func crawlSlackEngineering(ctx *cli.Context) error {
 
 	logger.Info(
 		"args",
-		zap.Any(slackEngineeringFlagNameChannel, ctx.String(slackEngineeringFlagNameChannel)),
+		zap.Any(goldmanSachsFlagNameChannel, ctx.String(goldmanSachsFlagNameChannel)),
+		zap.Any(goldmanSachsFlagNameRecentDays, ctx.Int(goldmanSachsFlagNameRecentDays)),
 	)
 
-	rssCrawler := slackengineering.NewCrawler(
+	rssCrawler := goldmansachs.NewCrawler(
 		logger,
-		ctx.String(slackEngineeringFlagNameChannel),
+		ctx.String(goldmanSachsFlagNameChannel),
+		ctx.Int(goldmanSachsFlagNameRecentDays),
 	)
 
 	events, err := rssCrawler.Crawl()

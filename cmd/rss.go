@@ -48,12 +48,12 @@ func crawlRSS(ctx *cli.Context) error {
 
 	var f func(string) (*gorm.DB, error)
 	var c string
-	if mysqlConn != "" {
-		f = openMysql
-		c = mysqlConn
-	} else if postgresConn != "" {
+	if postgresConn != "" {
 		f = openPostgres
 		c = postgresConn
+	} else if mysqlConn != "" {
+		f = openMysql
+		c = mysqlConn
 	} else {
 		return errors.New("no connection found")
 	}
