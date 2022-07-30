@@ -14,7 +14,7 @@ type Crawler struct {
 	eventBuilder eventBuilder
 
 	channel    string
-	recentDays int
+	recentDays int64
 }
 
 const URL string = "https://developer.gs.com/blog/posts"
@@ -61,7 +61,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
 }
 
-func NewCrawler(logger *zap.Logger, channel string, recentDays int) *Crawler {
+func NewCrawler(logger *zap.Logger, channel string, recentDays int64) *Crawler {
 	return &Crawler{
 		logger:     logger,
 		channel:    channel,

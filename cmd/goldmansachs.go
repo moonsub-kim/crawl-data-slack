@@ -54,15 +54,15 @@ func crawlGoldmanSachs(ctx *cli.Context) error {
 	}
 
 	logger.Info(
-		"args",
+		"goldman-sachs",
 		zap.Any(goldmanSachsFlagNameChannel, ctx.String(goldmanSachsFlagNameChannel)),
-		zap.Any(goldmanSachsFlagNameRecentDays, ctx.Int(goldmanSachsFlagNameRecentDays)),
+		zap.Any(goldmanSachsFlagNameRecentDays, ctx.Int64(goldmanSachsFlagNameRecentDays)),
 	)
 
 	rssCrawler := goldmansachs.NewCrawler(
 		logger,
 		ctx.String(goldmanSachsFlagNameChannel),
-		ctx.Int(goldmanSachsFlagNameRecentDays),
+		ctx.Int64(goldmanSachsFlagNameRecentDays),
 	)
 
 	events, err := rssCrawler.Crawl()

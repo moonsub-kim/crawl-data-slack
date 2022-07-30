@@ -24,7 +24,7 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 				UserName: channel,
 				UID:      name,
 				Name:     name,
-				Message:  fmt.Sprintf("[%s] <%s|%s>", dto.Date, dto.URL, dto.Name),
+				Message:  fmt.Sprintf("[%s] GoldmanSachs <%s|%s>", dto.Date, dto.URL, dto.Name),
 			},
 		)
 	}
