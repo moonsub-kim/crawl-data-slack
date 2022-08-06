@@ -1,7 +1,9 @@
 package rss
 
 import (
-	"context"
+	"io"
+	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/mmcdole/gofeed"
@@ -24,14 +26,27 @@ func (c Crawler) GetCrawlerName() string { return "rss" }
 func (c Crawler) GetJobName() string     { return c.name }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-
 	c.logger.Info(
 		"site", zap.Any("site", c.siteName),
 	)
-	p := gofeed.NewParser()
-	feed, err := p.ParseURLWithContext(c.siteName, ctx)
+
+	client := http.Client{Timeout: 60 * time.Second}
+	resp, err := client.Get(c.siteName)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	pattern := regexp.MustCompile(string(rune(8))) // remove backspace charater
+	str := pattern.ReplaceAllString(string(b), "")
+
+	parser := gofeed.NewParser()
+	feed, err := parser.ParseString(str)
 	if err != nil {
 		return nil, err
 	}
