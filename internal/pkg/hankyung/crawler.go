@@ -41,12 +41,12 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 	doc = soup.HTMLParse(res)
-	figureReplacer := regexp.MustCompile(`<figure .+?img src="(.+?)".+?</figure>`)
+	figureReplacer := regexp.MustCompile(`<img src="(.+?)".+>`)
 	iframeRemover := regexp.MustCompile(`<iframe.+?</iframe>`)
 	tagRemover := regexp.MustCompile(`<.+?>`)
 	consecutiveNewlineRemover := regexp.MustCompile(`(\n\s*)+`)
 	body := doc.Find("div", "class", "article-body").HTML()
-	body = figureReplacer.ReplaceAllString(body, "<Figure|$1>")
+	body = figureReplacer.ReplaceAllString(body, "$1")
 	body = iframeRemover.ReplaceAllString(body, "")
 	body = tagRemover.ReplaceAllString(body, "")
 	body = consecutiveNewlineRemover.ReplaceAllString(body, "\n")
