@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -49,9 +50,14 @@ func (c Crawler) CrawlStatus() ([]crawler.Event, error) {
 		return []crawler.Event{}, nil
 	}
 
+	pattern := regexp.MustCompile(`(\n\s+)+`)
 	var events []crawler.Event
 	for _, div := range divs {
-		if strings.Contains(div.Text(), c.region) {
+		if strings.Contains(div.FullText(), c.region) {
+			a := div.Find("a", "class", "actual-title")
+			text := div.Find("div", "class", "updates").FullText()
+			text = pattern.ReplaceAllString(text, "\n")
+
 			small := doc.Find("small")
 			date := time.Now().String()
 			if small.Error == nil {
@@ -65,7 +71,7 @@ func (c Crawler) CrawlStatus() ([]crawler.Event, error) {
 					UserName: c.channel,
 					UID:      date,
 					Name:     date,
-					Message:  fmt.Sprintf("%s\n<%s|Confluent Cloud Status>", div.Text(), url),
+					Message:  fmt.Sprintf("%s%s<%s|Confluent Cloud Status>", a.FullText(), text, url),
 				},
 			)
 		}
