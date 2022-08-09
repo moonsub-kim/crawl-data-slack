@@ -3,8 +3,11 @@ package confluent
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
+	"github.com/anaskhan96/soup"
 	"github.com/chromedp/chromedp"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"go.uber.org/zap"
@@ -16,20 +19,70 @@ type Crawler struct {
 	eventBuilder eventBuilder
 
 	channel string
+	jobName string
+	region  string
 }
 
-const URL string = "https://docs.confluent.io/cloud/current/release-notes/index.html"
-
 func (c Crawler) GetCrawlerName() string { return "confluent" }
-func (c Crawler) GetJobName() string     { return "release" }
+func (c Crawler) GetJobName() string     { return c.jobName }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
+	switch c.GetJobName() {
+	case "release":
+		return c.CrawlRelease()
+	case "status":
+		return c.CrawlStatus()
+	}
+	return nil, fmt.Errorf("unsupported crawler %s", c.GetJobName())
+}
+
+func (c Crawler) CrawlStatus() ([]crawler.Event, error) {
+	url := "https://status.confluent.cloud/"
+	res, err := soup.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	doc := soup.HTMLParse(res)
+	divs := doc.FindAll("div", "class", "unresolved-incident")
+	if len(divs) == 0 { // empty incident
+		return []crawler.Event{}, nil
+	}
+
+	var events []crawler.Event
+	for _, div := range divs {
+		if strings.Contains(div.Text(), c.region) {
+			small := doc.Find("small")
+			date := time.Now().String()
+			if small.Error == nil {
+				date = small.Text()
+			}
+			events = append(
+				events,
+				crawler.Event{
+					Crawler:  c.GetCrawlerName(),
+					Job:      c.GetJobName(),
+					UserName: c.channel,
+					UID:      date,
+					Name:     date,
+					Message:  fmt.Sprintf("%s\n<%s|Confluent Cloud Status>", div.Text(), url),
+				},
+			)
+		}
+	}
+
+	return events, nil
+}
+
+func (c Crawler) CrawlRelease() ([]crawler.Event, error) {
 	var jsonBody string
 	var dtos []DTO
 
+	url := "https://docs.confluent.io/cloud/current/release-notes/index.html"
+
 	err := chromedp.Run(
 		c.ctx,
-		chromedp.Navigate(URL),
+		chromedp.Navigate(url),
 		chromedp.Sleep(time.Second*2),
 		chromedp.EvaluateAsDevTools(
 			`
@@ -63,14 +116,16 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 
-	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel, URL)
+	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel, url)
 }
 
-func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string) *Crawler {
+func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string, jobName string, region string) *Crawler {
 	return &Crawler{
 		logger: logger,
 		ctx:    chromectx,
 
 		channel: channel,
+		jobName: jobName,
+		region:  region,
 	}
 }

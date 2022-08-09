@@ -16,6 +16,22 @@ import (
 	"go.uber.org/zap"
 )
 
+var (
+	confluentFlagNameChannel string = "channel"
+	confluentFlagNameJob     string = "job"
+	confluentFlagNameRegion  string = "region"
+
+	commandConfluent *cli.Command = &cli.Command{
+		Name: "confluent",
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: confluentFlagNameChannel, Required: true},
+			&cli.StringFlag{Name: confluentFlagNameJob, Required: true},
+			&cli.StringFlag{Name: confluentFlagNameRegion, Required: false},
+		},
+		Action: CrawlConfluent,
+	}
+)
+
 func CrawlConfluent(ctx *cli.Context) error {
 	slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
 	mysqlConn := os.Getenv("MYSQL_CONN")
@@ -45,9 +61,20 @@ func CrawlConfluent(ctx *cli.Context) error {
 	)
 	defer cancel()
 
-	logger.Info("slack channel", zap.Any("channel", ctx.String("channel")))
+	logger.Info(
+		"confluent",
+		zap.Any(confluentFlagNameChannel, ctx.String(confluentFlagNameChannel)),
+		zap.Any(confluentFlagNameJob, ctx.String(confluentFlagNameJob)),
+		zap.Any(confluentFlagNameRegion, ctx.String(confluentFlagNameRegion)),
+	)
 	repository := repository.NewRepository(logger, db)
-	confluentCrawler := confluent.NewCrawler(logger, chromectx, ctx.String("channel"))
+	confluentCrawler := confluent.NewCrawler(
+		logger,
+		chromectx,
+		ctx.String(confluentFlagNameChannel),
+		ctx.String(confluentFlagNameJob),
+		ctx.String(confluentFlagNameRegion),
+	)
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
 	m, err := toRenameMap(logger, ctx.String("renames"))
