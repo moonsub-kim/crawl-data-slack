@@ -101,13 +101,7 @@ var Commands = []*cli.Command{
 				},
 				Action: CrawlTechCrunch,
 			},
-			{
-				Name: "confluent",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel"},
-				},
-				Action: CrawlConfluent,
-			},
+			commandConfluent,
 			commandRSS,
 			commandSlackEngineering,
 			commandShopifyEngineering,
