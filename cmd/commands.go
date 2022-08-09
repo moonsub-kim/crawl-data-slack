@@ -107,6 +107,7 @@ var Commands = []*cli.Command{
 			commandShopifyEngineering,
 			commandGoldmanSachs,
 			commandMiraeAsset,
+			commandHankyung,
 		},
 	},
 	{

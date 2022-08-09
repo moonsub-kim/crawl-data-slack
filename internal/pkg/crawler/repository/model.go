@@ -8,7 +8,7 @@ type Event struct {
 	UserName  string    `gorm:"type:varchar(128)"`
 	UID       string    `gorm:"type:varchar(128);uniqueIndex:uid_name"`
 	Name      string    `gorm:"type:varchar(128);uniqueIndex:uid_name"`
-	Message   string    `gorm:"type:varchar(8192)"`
+	Message   string    `gorm:"type:varchar(16384)"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 }
 
