@@ -30,7 +30,7 @@ init: ## init creates .env file to inject environment variables
 # make up cmd="crawl wanted --channel CHANNEL --query \"SEARCH_STRING\""
 # make up cmd="crawl techcrunch --channel CHANNEL"
 # make up cmd="crawl confluent --job release --channel CHANNEL"
-# make up cmd="crawl confluent --job status --channel CHANNEL --region eu-central-1"
+# make up cmd="crawl confluent --job status --channel CHANNEL --keyword 'ap-northeast-1' --keyword 'Metrics\ API'"
 # make up cmd="crawl rss --channel geeknews --name spotify --site 'https://engineering.atspotify.com/feed/' --recent-days 20"
 # make up cmd="crawl shopify-engineering --channel geeknews"
 # make up cmd="crawl slack-engineering --channel geeknews"

@@ -19,9 +19,9 @@ type Crawler struct {
 	ctx          context.Context
 	eventBuilder eventBuilder
 
-	channel string
-	jobName string
-	region  string
+	channel  string
+	jobName  string
+	keywords []string
 }
 
 func (c Crawler) GetCrawlerName() string { return "confluent" }
@@ -53,7 +53,7 @@ func (c Crawler) CrawlStatus() ([]crawler.Event, error) {
 	pattern := regexp.MustCompile(`(\n\s+)+`)
 	var events []crawler.Event
 	for _, div := range divs {
-		if strings.Contains(div.FullText(), c.region) {
+		if c.containsKeyword(div.FullText()) {
 			a := div.Find("a", "class", "actual-title")
 			text := div.Find("div", "class", "updates").FullText()
 			text = pattern.ReplaceAllString(text, "\n")
@@ -78,6 +78,15 @@ func (c Crawler) CrawlStatus() ([]crawler.Event, error) {
 	}
 
 	return events, nil
+}
+
+func (c Crawler) containsKeyword(s string) bool {
+	for _, keyword := range c.keywords {
+		if strings.Contains(s, keyword) {
+			return true
+		}
+	}
+	return false
 }
 
 func (c Crawler) CrawlRelease() ([]crawler.Event, error) {
@@ -125,13 +134,13 @@ func (c Crawler) CrawlRelease() ([]crawler.Event, error) {
 	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel, url)
 }
 
-func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string, jobName string, region string) *Crawler {
+func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string, jobName string, keywords []string) *Crawler {
 	return &Crawler{
 		logger: logger,
 		ctx:    chromectx,
 
-		channel: channel,
-		jobName: jobName,
-		region:  region,
+		channel:  channel,
+		jobName:  jobName,
+		keywords: keywords,
 	}
 }

@@ -19,14 +19,14 @@ import (
 var (
 	confluentFlagNameChannel string = "channel"
 	confluentFlagNameJob     string = "job"
-	confluentFlagNameRegion  string = "region"
+	confluentFlagNameKeyword string = "keyword"
 
 	commandConfluent *cli.Command = &cli.Command{
 		Name: "confluent",
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: confluentFlagNameChannel, Required: true},
 			&cli.StringFlag{Name: confluentFlagNameJob, Required: true},
-			&cli.StringFlag{Name: confluentFlagNameRegion, Required: false},
+			&cli.StringSliceFlag{Name: confluentFlagNameKeyword, Required: false, Usage: "space separated keywords"},
 		},
 		Action: CrawlConfluent,
 	}
@@ -65,15 +65,16 @@ func CrawlConfluent(ctx *cli.Context) error {
 		"confluent",
 		zap.Any(confluentFlagNameChannel, ctx.String(confluentFlagNameChannel)),
 		zap.Any(confluentFlagNameJob, ctx.String(confluentFlagNameJob)),
-		zap.Any(confluentFlagNameRegion, ctx.String(confluentFlagNameRegion)),
+		zap.Any(confluentFlagNameKeyword, ctx.StringSlice(confluentFlagNameKeyword)),
 	)
+
 	repository := repository.NewRepository(logger, db)
 	confluentCrawler := confluent.NewCrawler(
 		logger,
 		chromectx,
 		ctx.String(confluentFlagNameChannel),
 		ctx.String(confluentFlagNameJob),
-		ctx.String(confluentFlagNameRegion),
+		ctx.StringSlice(confluentFlagNameKeyword),
 	)
 	api := slack.New(slackBotToken)
 	client := slackclient.NewClient(logger, api)
