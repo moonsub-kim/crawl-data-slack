@@ -61,7 +61,7 @@ func (c Crawler) CrawlStatus() ([]crawler.Event, error) {
 			small := doc.Find("small")
 			date := time.Now().String()
 			if small.Error == nil {
-				date = small.Text()
+				date = small.FullText()
 			}
 			events = append(
 				events,
