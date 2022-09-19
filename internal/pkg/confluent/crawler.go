@@ -53,7 +53,7 @@ func (c Crawler) CrawlStatus() ([]crawler.Event, error) {
 	pattern := regexp.MustCompile(`(\n\s+)+`)
 	var events []crawler.Event
 	for _, div := range divs {
-		if c.containsKeyword(div.FullText()) {
+		if c.containsKeyword(strings.ToLower(div.FullText())) {
 			a := div.Find("a", "class", "actual-title")
 			text := div.Find("div", "class", "updates").FullText()
 			text = pattern.ReplaceAllString(text, "\n")
@@ -135,12 +135,19 @@ func (c Crawler) CrawlRelease() ([]crawler.Event, error) {
 }
 
 func NewCrawler(logger *zap.Logger, chromectx context.Context, channel string, jobName string, keywords []string) *Crawler {
+	keywordsLower := []string{}
+	for _, keyword := range keywords {
+		keywordsLower = append(keywordsLower, strings.ToLower(keyword))
+	}
+
+	logger.Info("keywords", zap.Any("keywords", keywordsLower))
+
 	return &Crawler{
 		logger: logger,
 		ctx:    chromectx,
 
 		channel:  channel,
 		jobName:  jobName,
-		keywords: keywords,
+		keywords: keywordsLower,
 	}
 }
