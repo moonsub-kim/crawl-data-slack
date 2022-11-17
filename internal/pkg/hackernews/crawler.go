@@ -27,21 +27,21 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 	doc := soup.HTMLParse(res)
 
-	contents := doc.Find("table", "class", "itemlist").Find("tbody").FindAll("tr")
+	contents := doc.Find("table", "id", "hnmain").FindAll("table")[1].Find("tbody").FindAll("tr")
 	for i := 0; i < len(contents); i += 3 {
 		athing := contents[i]
-		metdata := contents[i+1]
+		metadata := contents[i+1]
 		if athing.Attrs()["class"] == "morespace" {
 			break
 		}
 
 		id := strings.TrimSpace(athing.Attrs()["id"])
-		a := athing.Find("a", "class", "titlelink")
+		a := athing.Find("span", "class", "titleline").FindAll("a")[0]
 		href := strings.TrimSpace(a.Attrs()["href"])
 		if strings.HasPrefix(href, "item?id=") {
 			href = "https://news.ycombinator.com/" + href
 		}
-		subtext := metdata.Find("td", "class", "subtext")
+		subtext := metadata.Find("td", "class", "subtext")
 
 		dtos = append(dtos, DTO{
 			ID:         id,
