@@ -48,6 +48,7 @@ var (
 					Subcommands: []*cli.Command{
 						commandGoldmanSachs,
 						commandHackerNews,
+						commandQuastor,
 					},
 				},
 				commandRSS,
