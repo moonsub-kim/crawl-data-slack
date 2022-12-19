@@ -41,13 +41,6 @@ var Commands = []*cli.Command{
 				Action: CrawlHackerNews,
 			},
 			{
-				Name: "quasarzone",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel"},
-				},
-				Action: CrawlQuasarZoneSales,
-			},
-			{
 				Name: "gitpublic",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "channel"},
