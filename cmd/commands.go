@@ -8,9 +8,12 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
+	"reflect"
 
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/slackclient"
+	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -19,103 +22,41 @@ import (
 	"gorm.io/gorm"
 )
 
-var Commands = []*cli.Command{
-	{
-		Name: "crawl",
-		Subcommands: []*cli.Command{
-			{
-				Name: "groupware",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{Name: "job"},
-					&cli.StringFlag{Name: "masters"},
-					&cli.StringFlag{Name: "renames"},
-				},
-				Action: CrawlGroupWareDeclinedPayments,
+type initCrawlerFunc func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error)
+
+var (
+	argChannel = "channel"
+
+	Commands = []*cli.Command{
+		{
+			Name: "crawl",
+			Flags: []cli.Flag{
+				&cli.StringFlag{Name: argChannel},
 			},
-			{
-				Name: "hackernews",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel"},
-					&cli.IntFlag{Name: "point_threshold"},
+			Subcommands: []*cli.Command{
+				{
+					Name: "finance",
+					Subcommands: []*cli.Command{
+						commandGlobalMonitor,
+						commandHankyung,
+						commandIPO,
+						commandMiraeAsset,
+					},
 				},
-				Action: CrawlHackerNews,
-			},
-			{
-				Name: "gitpublic",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel"},
-					&cli.StringFlag{Name: "organization"},
+				{
+					Name: "tech",
+					Subcommands: []*cli.Command{
+						commandGoldmanSachs,
+						commandHackerNews,
+					},
 				},
-				Action: CrawlGitPublic,
-			},
-			{
-				Name: "wanted",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel"},
-					&cli.StringFlag{Name: "query"},
-				},
-				Action: CrawlWanted,
-			},
-			{
-				Name: "eomisae",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel"},
-					&cli.StringFlag{Name: "target"},
-				},
-				Action: CrawlEomisae,
-			},
-			{
-				Name: "ipo",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel"},
-				},
-				Action: CrawlIPO,
-			},
-			{
-				Name: "financial-report",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel"},
-				},
-				Action: CrawlFinancialReport,
-			},
-			{
-				Name: "spinnaker",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel"},
-					&cli.StringFlag{Name: "host"},
-					&cli.StringFlag{Name: "token"},
-				},
-				Action: CrawlSpinnaker,
-			},
-			{
-				Name: "techcrunch",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel"},
-				},
-				Action: CrawlTechCrunch,
-			},
-			commandConfluent,
-			commandRSS,
-			commandSlackEngineering,
-			commandShopifyEngineering,
-			commandGoldmanSachs,
-			commandMiraeAsset,
-			commandHankyung,
-		},
-	},
-	{
-		Name: "slack",
-		Subcommands: []*cli.Command{
-			{
-				Name: "get-channel",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "channel"},
-				},
-				Action: GetChannel,
+				commandRSS,
+				commandConfluent,
+				commandWanted,
 			},
 		},
-	},
-}
+	}
+)
 
 func getChromeURL(logger *zap.Logger, chromeHost string) (string, error) {
 	endpoint := fmt.Sprintf("http://%s/json/version", chromeHost)
@@ -182,25 +123,6 @@ func migrate(db *gorm.DB) error {
 	)
 }
 
-func toRenameMap(l *zap.Logger, s string) (map[string]string, error) {
-	if s == "" {
-		return map[string]string{}, nil
-	}
-
-	m := map[string]string{}
-	renames := strings.Split(s, ",")
-	for _, rename := range renames {
-		splitted := strings.Split(s, "=")
-		if len(splitted) != 2 {
-			return nil, fmt.Errorf("failed to parse rename %s", rename)
-		}
-
-		m[splitted[0]] = splitted[1]
-	}
-	l.Info("renameMap", zap.Any("map", m))
-	return m, nil
-}
-
 func openPostgres(conn string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(conn), &gorm.Config{})
 	if err != nil {
@@ -227,4 +149,73 @@ func openMysql(conn string) (*gorm.DB, error) {
 	}
 
 	return db, nil
+}
+
+func openDB(logger *zap.Logger) (*gorm.DB, error) {
+	postgresConn := os.Getenv("POSTGRES_CONN")
+	mysqlConn := os.Getenv("MYSQL_CONN")
+
+	var f func(string) (*gorm.DB, error)
+	var c string
+	if postgresConn != "" {
+		f = openPostgres
+		c = postgresConn
+	} else if mysqlConn != "" {
+		f = openMysql
+		c = mysqlConn
+	} else {
+		return nil, errors.New("no connection found")
+	}
+
+	return f(c)
+}
+
+func Run(initCrawler initCrawlerFunc) func(ctx *cli.Context) error {
+	return func(ctx *cli.Context) error {
+		slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
+
+		logger := zapLogger()
+
+		kv := map[string]string{}
+		for _, k := range ctx.FlagNames() {
+			kv[k] = ctx.String(k)
+		}
+		logger.Info(
+			"flags",
+			zap.Any("flags", kv),
+		)
+
+		c, err := initCrawler(ctx, logger, ctx.String(argChannel))
+		if err != nil {
+			return err
+		}
+
+		db, err := openDB(logger)
+		if err != nil {
+			return err
+		}
+
+		u := crawler.NewUseCase(
+			logger,
+			repository.NewRepository(logger, db),
+			c,
+			slackclient.NewClient(
+				logger,
+				slack.New(slackBotToken),
+			),
+		)
+
+		err = u.Work()
+		if err != nil {
+			logger.Error(
+				"Work Error",
+				zap.Error(err),
+				zap.String("type", reflect.TypeOf(err).String()),
+			)
+			return err
+		}
+
+		logger.Info("Succeeded")
+		return nil
+	}
 }

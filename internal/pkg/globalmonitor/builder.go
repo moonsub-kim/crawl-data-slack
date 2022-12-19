@@ -1,4 +1,4 @@
-package financialreport
+package globalmonitor
 
 import (
 	"fmt"

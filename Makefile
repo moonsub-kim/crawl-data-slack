@@ -17,36 +17,35 @@ init: ## init creates .env file to inject environment variables
 	" >> .env
 
 # Examples
-# make up cmd="crawl groupware --job declined_payments"
-# make up cmd="crawl hackernews --channel CHANNEL --point_threshold 100"
-# make up cmd="crawl quasarzone --channel CHANNEL"
-# make up cmd="crawl eomisae --channel CHANNEL --target raffle"
-# make up cmd="crawl eomisae --channel CHANNEL --target fashion"
-# make up cmd="crawl financial-report --channel CHANNEL"
-# make up cmd="crawl gitpublic --channel CHANNEL"
-# make up cmd="crawl ipo --channel CHANNEL"
-# make up cmd="crawl gitpublic --channel CHANNEL"
-# make up cmd="crawl spinnaker --channel CHANNEL --token GITHUB_TOKEN --host HOST"
-# make up cmd="crawl wanted --channel CHANNEL --query \"SEARCH_STRING\""
-# make up cmd="crawl techcrunch --channel CHANNEL"
-# make up cmd="crawl confluent --job release --channel CHANNEL"
-# make up cmd="crawl confluent --job status --channel kafka --keyword 'ap-northeast-1' --keyword 'Cloud\ Metrics' --keyword 'metrics API' --keyword 'ksqlDB' --keyword 'Confluent Cloud API'"
-# make up cmd="crawl rss --channel geeknews --name spotify --site 'https://engineering.atspotify.com/feed/' --recent-days 20"
-# make up cmd="crawl shopify-engineering --channel geeknews"
-# make up cmd="crawl slack-engineering --channel geeknews"
-# make up cmd="crawl goldman-sachs --channel geeknews --recent-days 3"
-# make up cmd="crawl mirae-asset --channel geeknews"
-# make up cmd="crawl hankyung --channel report"
-up: ## Run the application `make up cmd="crawl financial-report --channel my_channel"`, open the Makefile to see more examples.
+# make up cmd="crawl --channel CHANNEL finance global-monitor"
+# make up cmd="crawl --channel CHANNEL finance hankyung"
+# make up cmd="crawl --channel CHANNEL finance mirae-asset"
+# make up cmd="crawl --channel CHANNEL tech goldman-sachs --recent-days 3"
+# make up cmd="crawl --channel CHANNEL tech hacker-news --point_threshold 100"
+# make up cmd="crawl --channel CHANNEL rss --name amazon-science --site https://www.amazon.science/index.rss --url-contains /latest-news/,/blog/ --recent-days 3"
+# make up cmd="crawl --channel CHANNEL wanted --query 'data analyst'"
+# make up cmd="crawl --channel CHANNEL wanted --query 'data scientist'"
+# make up cmd="crawl --channel CHANNEL wanted --query 'data engineer'"
+# make up cmd="crawl --channel CHANNEL wanted --query '데이터 사이언티스트'"
+# make up cmd="crawl --channel CHANNEL wanted --query 'brand design'"
+# make up cmd="crawl --channel CHANNEL wanted --query '브랜드 디자'"
+# make up cmd="crawl --channel CHANNEL wanted --query 'visual design'"
+# make up cmd="crawl --channel CHANNEL wanted --query '비주얼 디자'"
+
+# make up cmd="crawl --channel CHANNEL finance ipo"
+# make up cmd="crawl --channel CHANNEL confluent --job release"
+# make up cmd="crawl --channel CHANNEL confluent --job status --channel kafka --keyword 'ap-northeast-1' --keyword 'Cloud\ Metrics' --keyword 'metrics API' --keyword 'ksqlDB' --keyword 'Confluent Cloud API'"
+# make up cmd="crawl --channel CHANNEL rss --channel geeknews --name spotify --site 'https://engineering.atspotify.com/feed/' --recent-days 20"
+up: ## Run the application `make up cmd="crawl --channel CHANNEL financial-report --channel my_channel"`, open the Makefile to see more examples.
 	@docker-compose build app
 	@COMMAND="$(cmd)" docker-compose up app
 
-# crawl-data-slack crawl groupware -job declined_payments
-# crawl-data-slack crawl hackernews --channel hacker-news --point_threshold 100
-# crawl-data-slack crawl quasarzone --channel quasarzone
-# crawl-data-slack crawl book --channel gos16052
-# crawl-data-slack crawl eomisae --channel gos16052 --target raffle
-# crawl-data-slack crawl ipo --channel gos16052
+# crawl-data-slack crawl --channel CHANNEL groupware -job declined_payments
+# crawl-data-slack crawl --channel CHANNEL hackernews --channel hacker-news --point_threshold 100
+# crawl-data-slack crawl --channel CHANNEL quasarzone --channel quasarzone
+# crawl-data-slack crawl --channel CHANNEL book --channel gos16052
+# crawl-data-slack crawl --channel CHANNEL eomisae --channel gos16052 --target raffle
+# crawl-data-slack crawl --channel CHANNEL ipo --channel gos16052
 shell: ## Run the shell
 	@docker-compose build app
 	@docker-compose run --name crawl-data-slack-shell --rm app bash

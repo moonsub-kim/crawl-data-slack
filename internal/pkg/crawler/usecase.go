@@ -7,17 +7,14 @@ import (
 )
 
 type UseCase struct {
-	logger         *zap.Logger
-	repository     Repository
-	crawler        Crawler
-	notifier       Notifier
-	channelService ChannelService
-
-	renameMap map[string]string
+	logger     *zap.Logger
+	repository Repository
+	crawler    Crawler
+	messenger  Messenger
 }
 
 // TODO rename
-func (u UseCase) Work(crawler string, job string) error {
+func (u UseCase) Work() error {
 	crawledEvents, err := u.crawler.Crawl()
 	if err != nil {
 		return err
@@ -54,9 +51,7 @@ func (u UseCase) filterEvents(crawledEvents []Event) ([]Event, error) {
 
 func (u UseCase) notify(events []Event) error {
 	for i, e := range events {
-		name := u.rename(e.UserName)
-
-		user, err := u.GetChannel(name)
+		user, err := u.GetChannel(e.UserName)
 		if err != nil {
 			return err
 		}
@@ -66,7 +61,7 @@ func (u UseCase) notify(events []Event) error {
 			User:  user,
 		}
 
-		err = u.notifier.Notify(n)
+		err = u.messenger.Notify(n)
 		if err != nil {
 			u.logger.Error(
 				"notify error",
@@ -89,7 +84,7 @@ func (u UseCase) GetChannel(name string) (Channel, error) {
 		return Channel{}, err
 	} else if c.ID == "" {
 		// sync with slack
-		channels, err := u.channelService.GetChannels()
+		channels, err := u.messenger.GetChannels()
 		if err != nil {
 			return Channel{}, err
 		}
@@ -111,32 +106,16 @@ func (u UseCase) GetChannel(name string) (Channel, error) {
 	return c, nil
 }
 
-func (u UseCase) rename(name string) string {
-	if newName, ok := u.renameMap[name]; ok {
-		u.logger.Info(
-			"renamed",
-			zap.String("before", name),
-			zap.String("after", newName),
-		)
-		return newName
-	}
-	return name
-}
-
 func NewUseCase(
 	logger *zap.Logger,
 	repository Repository,
 	crawler Crawler,
-	notifier Notifier,
-	channelService ChannelService,
-	renameMap map[string]string,
+	messenger Messenger,
 ) *UseCase {
 	return &UseCase{
-		logger:         logger,
-		repository:     repository,
-		crawler:        crawler,
-		notifier:       notifier,
-		channelService: channelService,
-		renameMap:      renameMap,
+		logger:     logger,
+		repository: repository,
+		crawler:    crawler,
+		messenger:  messenger,
 	}
 }
