@@ -43,8 +43,8 @@ func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName, jobName string
 				Crawler:  crawlerName,
 				Job:      jobName,
 				UserName: channel,
-				UID:      item.Title,
-				Name:     item.Title,
+				UID:      item.Link,
+				Name:     item.Link,
 				Message: fmt.Sprintf(
 					"%s %s <%s|%s>\n%s",
 					optionalTime(item.PublishedParsed),
