@@ -7,12 +7,6 @@ help: ## Display this help.
 
 init: ## init creates .env file to inject environment variables
 	@echo "\
-	GROUPWARE_ID=\n\
-	GROUPWARE_PW=\n\
-
-	EOMISAE_ID=\n\
-	EOMISAE_PW=\n\
-
 	SLACK_BOT_TOKEN=\n\
 	" >> .env
 
