@@ -1,3 +1,5 @@
 .env
 driver/
 helm/values/
+.DS_Store
+.vscode

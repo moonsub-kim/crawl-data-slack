@@ -41,6 +41,7 @@ var (
 						commandHankyung,
 						commandIPO,
 						commandMiraeAsset,
+						commanKCIF,
 					},
 				},
 				{

@@ -14,6 +14,7 @@ init: ## init creates .env file to inject environment variables
 # make up cmd="crawl --channel CHANNEL finance global-monitor"
 # make up cmd="crawl --channel CHANNEL finance hankyung"
 # make up cmd="crawl --channel CHANNEL finance mirae-asset"
+# make up cmd="crawl --channel CHANNEL finance kcif"
 # make up cmd="crawl --channel CHANNEL tech goldman-sachs --recent-days 3"
 # make up cmd="crawl --channel CHANNEL tech hacker-news --point_threshold 100"
 # make up cmd="crawl --channel CHANNEL tech quastor"
