@@ -50,6 +50,7 @@ var (
 						commandGoldmanSachs,
 						commandHackerNews,
 						commandQuastor,
+						commandDeliveryHero,
 					},
 				},
 				commandRSS,
