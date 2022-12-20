@@ -78,7 +78,7 @@ func (c Crawler) parseContent(contentURL string) (string, error) {
 	table := div.Find("table")
 	var tabletxt string
 	if table.Error == nil {
-		div.Pointer.RemoveChild(table.Pointer)
+		// div.Pointer.RemoveChild(table.Pointer)
 		tabletxt = c.buildTable(table)
 	}
 
