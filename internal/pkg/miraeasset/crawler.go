@@ -75,15 +75,21 @@ func (c Crawler) parseContent(contentURL string) (string, error) {
 	doc := soup.HTMLParse(res)
 	div := doc.Find("div", "id", "messageContentsDiv")
 
+	// parse table
 	table := div.Find("table")
 	var tabletxt string
 	if table.Error == nil {
-		// div.Pointer.RemoveChild(table.Pointer)
-		tabletxt = c.buildTable(table)
+		table.Pointer.Parent.RemoveChild(table.Pointer) // div.FullText()에서 제외되도록 element제거
+		tabletxt = c.parseTable(table)
 	}
 
-	m := regexp.MustCompile(`\n+`)
-	text := m.ReplaceAllString("> "+div.FullText(), "\n> ")
+	m := regexp.MustCompile(` +\n`)
+	text := m.ReplaceAllString(strings.TrimSpace(div.FullText()), "")
+
+	c.logger.Info("trim", zap.Any("trim", text))
+
+	m = regexp.MustCompile(`\n+`)
+	text = m.ReplaceAllString("> "+text, "\n> ")
 	if tabletxt != "" {
 		text += "```\n" + tabletxt + "```"
 	}
@@ -91,52 +97,31 @@ func (c Crawler) parseContent(contentURL string) (string, error) {
 	return text, nil
 }
 
-func (c Crawler) buildTable(table soup.Root) string {
-	grid := [][]string{}
-	fmt.Println(table.HTML())
+func (c Crawler) parseTable(table soup.Root) string {
+	var tableStr [][]string
+	maxLen := 0
 
-	ths := table.FindAll("th")
-	rows := table.FindAll("tr")
-
-	grid = append(grid, []string{})
-	for _, th := range ths {
-		grid[len(grid)-1] = append(grid[len(grid)-1], th.Text())
-	}
-
-	for _, row := range rows {
-		tds := row.FindAll("td")
-		if len(tds) == len(ths) {
-			grid = append(grid, []string{})
-		} else {
-			continue
-		}
+	trs := table.FindAll("tr")
+	for _, tr := range trs { // col
+		var row []string
+		tds := tr.FindAll("td")
 		for _, td := range tds {
-			grid[len(grid)-1] = append(grid[len(grid)-1], td.Text())
-			fmt.Printf("append %s", td.Text())
-		}
-	}
+			text := strings.TrimSpace(td.FullText())
+			row = append(row, text)
 
-	fmt.Println(grid)
-
-	for j := 0; j < len(ths); j++ { // col
-		// get max
-		maxLen := 0
-		for i := 0; i < len(grid); i++ { // row
-			if maxLen < len(grid[i][j]) {
-				maxLen = len(grid[i][j])
+			if maxLen < len(text) {
+				maxLen = len(text)
 			}
 		}
-		maxLen += 1
-
-		// padding
-		for i := 0; i < len(grid); i++ {
-			grid[i][j] = fmt.Sprintf(fmt.Sprintf("%%-%ds", maxLen-len(grid[i][j])), grid[i][j])
-		}
+		tableStr = append(tableStr, row)
 	}
 
 	txt := ""
-	for i := 0; i < len(grid); i++ {
-		s := strings.Join(grid[i], " | ")
+	for i := 0; i < len(tableStr); i++ {
+		for j := 0; j < len(tableStr[i]); j++ {
+			tableStr[i][j] = fmt.Sprintf(fmt.Sprintf("%%-%ds", maxLen-len(tableStr[i][j])), tableStr[i][j])
+		}
+		s := strings.Join(tableStr[i], " | ")
 		txt += s + "\n"
 	}
 
