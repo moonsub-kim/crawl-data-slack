@@ -14,7 +14,7 @@ const iso8601Format = "2006-01-02T15:04:05Z07:00"
 type eventBuilder struct {
 }
 
-func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName, jobName string, filters []Filter, channel string) ([]crawler.Event, error) {
+func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName string, jobName string, filters []Filter, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event
 
 	optionalString := func(s string) string {
@@ -46,11 +46,12 @@ func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName, jobName string
 				UID:      item.Link,
 				Name:     item.Link,
 				Message: fmt.Sprintf(
-					"%s %s <%s|%s>\n%s",
+					"%s %s %s(%s)\n%s\n%s",
 					optionalTime(item.PublishedParsed),
 					jobName,
-					item.Link,
 					item.Title,
+					item.Link,
+					item.Description,
 					optionalString(strings.Join(item.Categories, ", ")),
 				),
 			},
