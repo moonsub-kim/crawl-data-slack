@@ -2,7 +2,6 @@ package rss
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/mmcdole/gofeed"
@@ -17,18 +16,18 @@ type eventBuilder struct {
 func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName string, jobName string, filters []Filter, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event
 
-	optionalString := func(s string) string {
-		if s == "" {
-			return ""
-		}
-		return fmt.Sprintf("(%s)", s)
-	}
-
 	optionalTime := func(t *time.Time) string {
 		if t == nil {
 			return ""
 		}
 		return fmt.Sprintf("[%v] ", t.Format(iso8601Format))
+	}
+
+	optinalImageURL := func(image *gofeed.Image) string {
+		if image == nil {
+			return ""
+		}
+		return image.URL
 	}
 
 	for i := len(feed.Items) - 1; i >= 0; i-- {
@@ -52,7 +51,7 @@ func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName string, jobName
 					item.Title,
 					item.Link,
 					item.Description,
-					optionalString(strings.Join(item.Categories, ", ")),
+					optinalImageURL(item.Image),
 				),
 			},
 		)
