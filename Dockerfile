@@ -1,4 +1,4 @@
-FROM golang:1.18.0 AS build
+FROM golang:1.19.4 AS build
 
 # Change working dir -> for locating configrations
 RUN mkdir -p /app

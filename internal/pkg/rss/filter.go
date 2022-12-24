@@ -1,99 +1,135 @@
 package rss
 
 import (
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/anaskhan96/soup"
 	"github.com/mmcdole/gofeed"
 )
 
 type CrawlerOption func(*Crawler)
 
-type Filter interface {
-	Filter(item *gofeed.Item) bool
+type Transformer interface {
+	Transform(item *gofeed.Item) *gofeed.Item
 	Reason() string
 	String() string
 }
 
-type filter struct {
+type transformer struct {
 	reason string
 	parsed string
 }
 
-func (f *filter) Reason() string {
+func (f *transformer) Reason() string {
 	return f.reason
 }
 
-func (f *filter) String() string {
+func (f *transformer) String() string {
 	return f.parsed
 }
 
-type categoryMustContainsFilter struct {
-	filter
+type categoryMustContainsTransformer struct {
+	transformer
 
 	categories []string
 }
 
-func (f *categoryMustContainsFilter) Filter(item *gofeed.Item) bool {
+func (f *categoryMustContainsTransformer) Transform(item *gofeed.Item) *gofeed.Item {
 	joined := strings.Join(item.Categories, ",")
 	for _, c := range f.categories {
 		if strings.Contains(joined, c) {
-			return false
+			return nil
 		}
 	}
 
-	return true
+	return item
 }
 
-func WithCategoryMustContainsFilter(categories []string) CrawlerOption {
+func WithCategoryMustContainsTransformer(categories []string) CrawlerOption {
 	return func(c *Crawler) {
-		c.filters = append(
-			c.filters,
-			&categoryMustContainsFilter{categories: categories},
+		c.transformers = append(
+			c.transformers,
+			&categoryMustContainsTransformer{categories: categories},
 		)
 	}
 }
 
-type urlMustContainsFilter struct {
-	filter
+type urlMustContainsTransformer struct {
+	transformer
 
 	keywords []string
 }
 
-func (f *urlMustContainsFilter) Filter(item *gofeed.Item) bool {
+func (f *urlMustContainsTransformer) Transform(item *gofeed.Item) *gofeed.Item {
 	for _, k := range f.keywords {
 		if strings.Contains(item.Link, k) {
-			return false
+			return nil
 		}
 	}
 
-	return true
+	return item
 }
 
-func WithURLMustContainsFilter(keywords []string) CrawlerOption {
+func WithURLMustContainsTransformer(keywords []string) CrawlerOption {
 	return func(c *Crawler) {
-		c.filters = append(
-			c.filters,
-			&urlMustContainsFilter{keywords: keywords},
+		c.transformers = append(
+			c.transformers,
+			&urlMustContainsTransformer{keywords: keywords},
 		)
 	}
 }
 
-type recentFilter struct {
-	filter
+type recentTransformer struct {
+	transformer
 
 	time time.Time
 }
 
-func (f *recentFilter) Filter(item *gofeed.Item) bool {
-	return item.PublishedParsed != nil && item.PublishedParsed.Before(f.time)
+func (f *recentTransformer) Transform(item *gofeed.Item) *gofeed.Item {
+	if item.PublishedParsed != nil && item.PublishedParsed.Before(f.time) {
+		return item
+	}
+	return nil
 }
 
-func WithRecentFilter(t time.Time) CrawlerOption {
+func WithRecentTransformer(t time.Time) CrawlerOption {
 	return func(c *Crawler) {
-		c.filters = append(
-			c.filters,
-			&recentFilter{time: t},
+		c.transformers = append(
+			c.transformers,
+			&recentTransformer{time: t},
+		)
+	}
+}
+
+type fetchRSSTransformer struct {
+	transformer
+
+	adRegex *regexp.Regexp
+}
+
+func (f *fetchRSSTransformer) Transform(item *gofeed.Item) *gofeed.Item {
+	item.Title = "" // Remove duplicated title with description
+	element := soup.HTMLParse("<html>" + item.Description + "</html>")
+
+	description := element.FullText()
+	description = strings.ReplaceAll(description, "(Feed generated with FetchRSS)", "") // Remove ad text
+
+	img := element.Find("img")
+	if img.Error == nil {
+		description += "\n" + img.Attrs()["src"]
+	}
+
+	item.Description = description
+	return item
+}
+
+func WithFetchRSSTransformer() CrawlerOption {
+	return func(c *Crawler) {
+		c.transformers = append(
+			c.transformers,
+			&fetchRSSTransformer{},
 		)
 	}
 }

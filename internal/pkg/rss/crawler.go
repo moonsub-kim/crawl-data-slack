@@ -19,7 +19,7 @@ type Crawler struct {
 	channel  string
 	name     string
 
-	filters []Filter
+	transformers []Transformer
 }
 
 func (c Crawler) GetCrawlerName() string { return "rss" }
@@ -51,7 +51,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 
-	return c.eventBuilder.buildEvents(feed, c.GetCrawlerName(), c.GetJobName(), c.filters, c.channel)
+	return c.eventBuilder.buildEvents(feed, c.GetCrawlerName(), c.GetJobName(), c.transformers, c.channel)
 }
 
 func NewCrawler(logger *zap.Logger, channel string, name string, siteName string, options ...CrawlerOption) *Crawler {
