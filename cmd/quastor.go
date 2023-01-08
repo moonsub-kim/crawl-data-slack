@@ -10,7 +10,7 @@ import (
 var (
 	commandQuastor *cli.Command = &cli.Command{
 		Name: "quastor",
-		Action: Run(
+		Action: RunCrawl(
 			func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error) {
 				return quastor.NewCrawler(
 					logger,

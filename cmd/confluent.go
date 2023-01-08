@@ -22,7 +22,7 @@ var (
 			&cli.StringFlag{Name: confluentArgJob, Required: true},
 			&cli.StringSliceFlag{Name: confluentArgKeyword, Required: false, Usage: "space separated keywords"},
 		},
-		Action: Run(
+		Action: RunCrawl(
 			func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error) {
 				chromeHost := os.Getenv("CHROME_HOST")
 				url, err := getChromeURL(logger, chromeHost)

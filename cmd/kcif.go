@@ -10,7 +10,7 @@ import (
 var (
 	commanKCIF *cli.Command = &cli.Command{
 		Name: "kcif",
-		Action: Run(
+		Action: RunCrawl(
 			func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error) {
 				return kcif.NewCrawler(
 					logger,

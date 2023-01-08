@@ -28,7 +28,7 @@ var (
 			&cli.Int64Flag{Name: rssArgRecentDays},
 			&cli.BoolFlag{Name: rssFetchRSS},
 		},
-		Action: Run(
+		Action: RunCrawl(
 			func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error) {
 				var opts []rss.CrawlerOption
 				if urlContains := ctx.String(rssArgURLContains); urlContains != "" {

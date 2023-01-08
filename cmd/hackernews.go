@@ -15,7 +15,7 @@ var (
 		Flags: []cli.Flag{
 			&cli.IntFlag{Name: hackerNewsArgPointThreshold, Required: false},
 		},
-		Action: Run(
+		Action: RunCrawl(
 			func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error) {
 				return hackernews.NewCrawler(
 					logger,

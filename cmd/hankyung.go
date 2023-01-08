@@ -10,7 +10,7 @@ import (
 var (
 	commandHankyung *cli.Command = &cli.Command{
 		Name: "hankyung",
-		Action: Run(
+		Action: RunCrawl(
 			func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error) {
 				return hankyung.NewCrawler(
 					logger,

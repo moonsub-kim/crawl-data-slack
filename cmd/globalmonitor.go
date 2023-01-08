@@ -10,7 +10,7 @@ import (
 var (
 	commandGlobalMonitor *cli.Command = &cli.Command{
 		Name: "global-monitor",
-		Action: Run(
+		Action: RunCrawl(
 			func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error) {
 				return globalmonitor.NewCrawler(
 					logger,
