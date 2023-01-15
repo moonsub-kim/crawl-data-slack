@@ -20,7 +20,7 @@ func (b eventBuilder) buildEvents(feed *gofeed.Feed, crawlerName string, jobName
 		if t == nil {
 			return ""
 		}
-		return fmt.Sprintf("[%v] ", t.Format(iso8601Format))
+		return fmt.Sprintf("[%v]", t.Format(iso8601Format))
 	}
 
 	for i := len(feed.Items) - 1; i >= 0; i-- {

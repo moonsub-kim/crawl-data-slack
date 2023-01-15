@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"errors"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -11,6 +12,7 @@ type UseCase struct {
 	repository Repository
 	crawler    Crawler
 	messenger  Messenger
+	archive    Archive
 }
 
 // TODO rename
@@ -106,16 +108,59 @@ func (u UseCase) GetChannel(name string) (Channel, error) {
 	return c, nil
 }
 
+func (u UseCase) upsertLabel(posts []Post) error {
+	existLabel, err := u.archive.ListLabels()
+	if err != nil {
+		return err
+	}
+
+	for _, p := range posts {
+		for _, l := range p.Labels {
+			if _, ok := existLabel[l]; !ok {
+				err := u.archive.CreateLabel(l)
+				if err != nil {
+					return err
+				}
+
+				existLabel[l] = struct{}{}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (u UseCase) Archive(channel string, dateFrom time.Time, dateTo time.Time) error {
+	c, err := u.GetChannel(channel)
+	if err != nil {
+		return err
+	}
+
+	posts, err := u.messenger.ArchivePosts(c, dateFrom, dateTo)
+	if err != nil {
+		return err
+	}
+
+	err = u.upsertLabel(posts)
+	if err != nil {
+		return err
+	}
+
+	return u.archive.CreatePosts(posts)
+}
+
 func NewUseCase(
 	logger *zap.Logger,
 	repository Repository,
 	crawler Crawler,
 	messenger Messenger,
+	archive Archive,
 ) *UseCase {
 	return &UseCase{
 		logger:     logger,
 		repository: repository,
 		crawler:    crawler,
 		messenger:  messenger,
+		archive:    archive,
 	}
 }

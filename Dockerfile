@@ -18,7 +18,7 @@ COPY ./cmd ./cmd/
 # Build the outyet command inside the container.
 RUN go build -o /go/bin/crawl-data-slack ./cmd
 
-FROM golang:1.18.0 AS prod
+FROM golang:1.19.4 AS prod
 
 COPY --from=build /go/bin/crawl-data-slack /go/bin/crawl-data-slack
 

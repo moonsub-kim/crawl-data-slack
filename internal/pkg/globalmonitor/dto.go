@@ -17,22 +17,22 @@ type Report struct {
 	Map map[string]interface{} `json:"-"`
 }
 
-// {
-//		"targetPeriodCheck":false
-//		"targetPeriodDate":null,
-//		"page":1,
-//		"pagePerItem":10
-//		"sortType":"latest",
-//		"lscCd":700,
-//		"authLscCd":0,
-//		"sscCd":"524910,521090,523050,523070",
-//		"authSscCd":0,
-//		"cmd":"rl_011",
-//		"startDate":"2022-01-16",
-//		"endDate":"2022-04-16",
-//		"searchItem":"title",
-//		"searchStr":"",
-//	}
+//	{
+//			"targetPeriodCheck":false
+//			"targetPeriodDate":null,
+//			"page":1,
+//			"pagePerItem":10
+//			"sortType":"latest",
+//			"lscCd":700,
+//			"authLscCd":0,
+//			"sscCd":"524910,521090,523050,523070",
+//			"authSscCd":0,
+//			"cmd":"rl_011",
+//			"startDate":"2022-01-16",
+//			"endDate":"2022-04-16",
+//			"searchItem":"title",
+//			"searchStr":"",
+//		}
 type RequestBody struct {
 	TargetPeriodCheck bool    `json:"targetPeriodCheck"`
 	TargetPeriodDate  *string `json:"targetPeriodDate,omitempty"`

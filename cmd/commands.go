@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,28 +11,40 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/google/go-github/v49/github"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
+	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/githubclient"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/slackclient"
 	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"golang.org/x/oauth2"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type initCrawlerFunc func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error)
-
 var (
-	argChannel = "channel"
+	dateLayout = "2006-01-02"
+
+	envIsDeubg       = "IS_DEBUG"
+	envMysqlConn     = "MYSQL_CONN"
+	envPostgresConn  = "POSTGRES_CONN"
+	envSlackBotToken = "SLACK_BOT_TOKEN"
+	envGithubToken   = "GITHUB_TOKEN"
+
+	crawlArgChannel = "channel"
+
+	githubArgOwner = "owner"
+	githubArgRepo  = "repo"
 
 	Commands = []*cli.Command{
 		{
 			Name: "crawl",
 			Flags: []cli.Flag{
-				&cli.StringFlag{Name: argChannel},
+				&cli.StringFlag{Name: crawlArgChannel},
 			},
 			Subcommands: []*cli.Command{
 				{
@@ -56,6 +69,24 @@ var (
 				commandRSS,
 				commandConfluent,
 				commandWanted,
+				commandDesignerJob,
+			},
+		},
+		{
+			Name: "slack",
+			Subcommands: []*cli.Command{
+				commandArchivePosts,
+			},
+		},
+		{
+			Name: "github",
+			Flags: []cli.Flag{
+				&cli.StringFlag{Name: githubArgOwner},
+				&cli.StringFlag{Name: githubArgRepo},
+			},
+			Subcommands: []*cli.Command{
+				commandGithubCreateIssue,
+				commandArchive,
 			},
 		},
 	}
@@ -104,16 +135,21 @@ func getChromeURL(logger *zap.Logger, chromeHost string) (string, error) {
 }
 
 func zapLogger() *zap.Logger {
+	isDebug := os.Getenv(envIsDeubg) != ""
 	// Create logger configuration
 	encoderCfg := zap.NewProductionEncoderConfig()
 	encoderCfg.TimeKey = "timestamp"
 	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
 
+	level := zap.NewAtomicLevelAt(zapcore.InfoLevel)
+	if isDebug {
+		level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
+	}
 	// Create logger with configurations
 	zapLogger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(encoderCfg),
 		zapcore.Lock(os.Stdout),
-		zap.NewAtomicLevelAt(zapcore.InfoLevel),
+		level,
 	))
 
 	return zapLogger
@@ -155,8 +191,8 @@ func openMysql(conn string) (*gorm.DB, error) {
 }
 
 func openDB(logger *zap.Logger) (*gorm.DB, error) {
-	postgresConn := os.Getenv("POSTGRES_CONN")
-	mysqlConn := os.Getenv("MYSQL_CONN")
+	postgresConn := os.Getenv(envPostgresConn)
+	mysqlConn := os.Getenv(envMysqlConn)
 
 	var f func(string) (*gorm.DB, error)
 	var c string
@@ -173,9 +209,11 @@ func openDB(logger *zap.Logger) (*gorm.DB, error) {
 	return f(c)
 }
 
-func Run(initCrawler initCrawlerFunc) func(ctx *cli.Context) error {
+type runSlackCommandFunc func(ctx *cli.Context, logger *zap.Logger, client *slackclient.Client) error
+
+func RunSlack(f runSlackCommandFunc) func(ctx *cli.Context) error {
 	return func(ctx *cli.Context) error {
-		slackBotToken := os.Getenv("SLACK_BOT_TOKEN")
+		slackBotToken := os.Getenv(envSlackBotToken)
 
 		logger := zapLogger()
 
@@ -188,7 +226,69 @@ func Run(initCrawler initCrawlerFunc) func(ctx *cli.Context) error {
 			zap.Any("flags", kv),
 		)
 
-		c, err := initCrawler(ctx, logger, ctx.String(argChannel))
+		client := slackclient.NewClient(
+			logger,
+			slack.New(slackBotToken),
+			slackBotToken,
+		)
+
+		return f(ctx, logger, client)
+	}
+}
+
+type runGithubCommandFunc func(ctx *cli.Context, logger *zap.Logger, client *githubclient.Client) error
+
+func RunGithub(f runGithubCommandFunc) func(ctx *cli.Context) error {
+	return func(ctx *cli.Context) error {
+		githubToken := os.Getenv(envGithubToken)
+
+		logger := zapLogger()
+
+		kv := map[string]string{}
+		for _, k := range ctx.FlagNames() {
+			kv[k] = ctx.String(k)
+		}
+		logger.Info(
+			"flags",
+			zap.Any("flags", kv),
+		)
+
+		client := githubclient.NewClient(
+			logger,
+			github.NewClient(
+				oauth2.NewClient(
+					context.Background(),
+					oauth2.StaticTokenSource(
+						&oauth2.Token{AccessToken: githubToken},
+					),
+				),
+			),
+			ctx.String("owner"),
+			ctx.String("repo"),
+		)
+
+		return f(ctx, logger, client)
+	}
+}
+
+type initCrawlerFunc func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error)
+
+func RunCrawl(initCrawler initCrawlerFunc) func(ctx *cli.Context) error {
+	return func(ctx *cli.Context) error {
+		slackBotToken := os.Getenv(envSlackBotToken)
+
+		logger := zapLogger()
+
+		kv := map[string]string{}
+		for _, k := range ctx.FlagNames() {
+			kv[k] = ctx.String(k)
+		}
+		logger.Info(
+			"flags",
+			zap.Any("flags", kv),
+		)
+
+		c, err := initCrawler(ctx, logger, ctx.String(crawlArgChannel))
 		if err != nil {
 			return err
 		}
@@ -205,7 +305,9 @@ func Run(initCrawler initCrawlerFunc) func(ctx *cli.Context) error {
 			slackclient.NewClient(
 				logger,
 				slack.New(slackBotToken),
+				slackBotToken,
 			),
+			nil,
 		)
 
 		err = u.Work()

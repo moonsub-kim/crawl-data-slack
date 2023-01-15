@@ -10,9 +10,11 @@ services:
       - bash
       - -c
       - |
-        wait-for-it.sh chrome:9222 -t 60 -- crawl-data-slack ${COMMAND}
+        wait-for-it.sh postgres:5432 -t 60 -- crawl-data-slack ${COMMAND}
       # crawl groupware -job declined_payments
     environment:
+      - IS_DEBUG=${IS_DEBUG}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
       - GROUPWARE_ID=${GROUPWARE_ID}
       - GROUPWARE_PW=${GROUPWARE_PW}
       - EOMISAE_ID=${EOMISAE_ID}
@@ -23,8 +25,8 @@ services:
       - CHROME_HOST=chrome:9222
       # - CHROME_LOG_LEVEL=DEBUG
     depends_on:
-     - db
-     - chrome
+    #  - db
+    #  - chrome
      - postgres
 
   chrome:
@@ -34,20 +36,20 @@ services:
     ports:
       - "9222:9222"
 
-  db:
-    container_name: db
-    platform: linux/x86_64
-    image: mysql:8.0.26
-    restart: always
-    ports: 
-      - 3306:3306
-    environment:
-     - MYSQL_DATABASE=crawler
-     - MYSQL_USER=crawler
-     - MYSQL_PASSWORD=crawler
-     - MYSQL_ALLOW_EMPTY_PASSWORD=1
-    volumes:
-      - mysql_data:/var/lib/mysql
+  # db:
+  #   container_name: db
+  #   platform: linux/x86_64
+  #   image: mysql:8.0.26
+  #   restart: always
+  #   ports: 
+  #     - 3306:3306
+  #   environment:
+  #    - MYSQL_DATABASE=crawler
+  #    - MYSQL_USER=crawler
+  #    - MYSQL_PASSWORD=crawler
+  #    - MYSQL_ALLOW_EMPTY_PASSWORD=1
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
 
   postgres:
     container_name: cralwer-postgres

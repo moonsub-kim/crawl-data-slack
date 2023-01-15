@@ -59,7 +59,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 			UserName: c.channel,
 			UID:      title,
 			Name:     title,
-			Message:  fmt.Sprintf("%s\n<%s|URL>", body, url),
+			Message:  fmt.Sprintf("<%s|URL>\n%s", body, url),
 		},
 	}, nil
 }
