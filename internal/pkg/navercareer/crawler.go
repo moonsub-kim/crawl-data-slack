@@ -16,6 +16,7 @@ type Crawler struct {
 	eventBuilder eventBuilder
 	channel      string
 	query        string
+	includes     []string
 	excludes     []string
 }
 
@@ -24,12 +25,19 @@ const URL string = "https://s.search.naver.com/p/career/search.naver"
 func (c Crawler) GetCrawlerName() string { return "naver" }
 func (c Crawler) GetJobName() string     { return "career" }
 
-func (c Crawler) isExcludes(title string) bool {
+func (c Crawler) filter(title string) bool {
 	for _, s := range c.excludes {
+		if strings.Contains(title, s) {
+			return false
+		}
+	}
+
+	for _, s := range c.includes {
 		if strings.Contains(title, s) {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -82,7 +90,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		div_info_area := doc.Find("div", "class", "info_area")
 
 		title := strings.TrimSpace(div_title_area.FullText())
-		if c.isExcludes(strings.ToLower(title)) {
+		if !c.filter(strings.ToLower(title)) {
 			continue
 		}
 
@@ -96,11 +104,12 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel), nil
 }
 
-func NewCrawler(logger *zap.Logger, channel string, query string, excludes []string) *Crawler {
+func NewCrawler(logger *zap.Logger, channel string, query string, includes []string, excludes []string) *Crawler {
 	return &Crawler{
 		logger:   logger,
 		channel:  channel,
 		query:    query,
+		includes: includes,
 		excludes: excludes,
 	}
 }
