@@ -76,7 +76,7 @@ var (
 		{
 			Name: "slack",
 			Subcommands: []*cli.Command{
-				commandArchivePosts,
+				commandListConversations,
 			},
 		},
 		{
@@ -210,33 +210,6 @@ func openDB(logger *zap.Logger) (*gorm.DB, error) {
 	return f(c)
 }
 
-type runSlackCommandFunc func(ctx *cli.Context, logger *zap.Logger, client *slackclient.Client) error
-
-func RunSlack(f runSlackCommandFunc) func(ctx *cli.Context) error {
-	return func(ctx *cli.Context) error {
-		slackBotToken := os.Getenv(envSlackBotToken)
-
-		logger := zapLogger()
-
-		kv := map[string]string{}
-		for _, k := range ctx.FlagNames() {
-			kv[k] = ctx.String(k)
-		}
-		logger.Info(
-			"flags",
-			zap.Any("flags", kv),
-		)
-
-		client := slackclient.NewClient(
-			logger,
-			slack.New(slackBotToken),
-			slackBotToken,
-		)
-
-		return f(ctx, logger, client)
-	}
-}
-
 type runGithubCommandFunc func(ctx *cli.Context, logger *zap.Logger, client *githubclient.Client) error
 
 func RunGithub(f runGithubCommandFunc) func(ctx *cli.Context) error {
@@ -307,6 +280,7 @@ func RunCrawl(initCrawler initCrawlerFunc) func(ctx *cli.Context) error {
 				logger,
 				slack.New(slackBotToken),
 				slackBotToken,
+				nil,
 			),
 			nil,
 		)

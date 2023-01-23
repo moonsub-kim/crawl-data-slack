@@ -16,18 +16,15 @@ import (
 )
 
 type Client struct {
-	logger *zap.Logger
-	api    *slack.Client
-	token  string
-	mapper mapper
+	logger  *zap.Logger
+	api     *slack.Client
+	token   string
+	mapper  mapper
+	filters []ArchiveFilter
 }
 
 var imageExt = map[string]struct{}{"jpg": {}, "jpeg": {}, "png": {}}
 var maxIteration int = 100
-var filters []ArchiveFilter = []ArchiveFilter{
-	messageSubTypeFilter{},                                               // negative filters, positive보다 우선함
-	IsUserMessageFilter{}, IsUserReactedFilter{}, IsUserThreadedFilter{}, // positive filters
-}
 
 func (c Client) getConversations(channelID string, from time.Time, to time.Time) ([]slack.Message, error) {
 	withRetry := func(params *slack.GetConversationHistoryParameters) (res *slack.GetConversationHistoryResponse, err error) {
@@ -96,7 +93,7 @@ func (c Client) getThreadMessages(channelID string, m slack.Message) ([]slack.Me
 }
 
 func (c Client) archiveFilter(messages []slack.Message) bool {
-	for _, f := range filters {
+	for _, f := range c.filters {
 		if !f.Positive() && !f.Passed(messages) {
 			return false
 		} else if f.Positive() && f.Passed(messages) {
@@ -118,12 +115,18 @@ func (c Client) buildPost(channel crawler.Channel, messages []slack.Message) (cr
 		splitted := strings.Split(messages[0].Text, "\n")
 		for _, l := range splitted {
 			if l != "" {
-				slackURLWithAliasPattern := regexp.MustCompile(`<(.+?)\|(.+?)>`)
+				slackURLWithAliasPattern := regexp.MustCompile(`<(.*?)\|?(.+?)>`)
 				title = slackURLWithAliasPattern.ReplaceAllString(l, "$2")
 				break
 			}
 		}
 	}
+	tsStr := strings.Split(messages[0].Timestamp, ".")[0]
+	ts, err := strconv.ParseInt(tsStr, 10, 64)
+	if err != nil {
+		return crawler.Post{}, err
+	}
+	title = fmt.Sprintf("[%s] %s", time.Unix(ts, 0).Format("2006-01-02 15:04:05"), title)
 
 	body, err := c.messageToBody(messages[0])
 	if err != nil {
@@ -382,11 +385,15 @@ func (c Client) messageToBody(message slack.Message) (crawler.Body, error) {
 	// }, nil
 }
 
-func NewClient(logger *zap.Logger, client *slack.Client, token string) *Client {
+func NewClient(logger *zap.Logger, client *slack.Client, token string, negativeFliters []ArchiveFilter) *Client {
+	negativeFilters := append([]ArchiveFilter{MessageSubTypeExistsFilter{}}, negativeFliters...)
+	positiveFilters := []ArchiveFilter{IsUserMessageFilter{}, IsUserReactedFilter{}, IsUserThreadedFilter{}}
+
 	return &Client{
-		logger: logger,
-		api:    client,
-		token:  token,
+		logger:  logger,
+		api:     client,
+		token:   token,
+		filters: append(negativeFilters, positiveFilters...),
 	}
 }
 

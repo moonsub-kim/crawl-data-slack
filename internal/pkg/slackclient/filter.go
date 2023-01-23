@@ -1,6 +1,10 @@
 package slackclient
 
-import "github.com/slack-go/slack"
+import (
+	"regexp"
+
+	"github.com/slack-go/slack"
+)
 
 type ArchiveFilter interface {
 	Positive() bool
@@ -61,10 +65,21 @@ func (f IsUserThreadedFilter) Passed(messages []slack.Message) bool {
 // negative filters
 
 // subtype이 들어있으면 channel_joined, thread_broadcast 등 특수목적 메시지임
-type messageSubTypeFilter struct {
+type MessageSubTypeExistsFilter struct {
 	negativeFilter
 }
 
-func (f messageSubTypeFilter) Passed(messages []slack.Message) bool {
+func (f MessageSubTypeExistsFilter) Passed(messages []slack.Message) bool {
 	return messages[0].SubType == ""
+}
+
+// message에 link가 없으면 제외
+type NoLinkFilter struct {
+	negativeFilter
+}
+
+func (f NoLinkFilter) Passed(messages []slack.Message) bool {
+	p := regexp.MustCompile("<.+>")
+	return len(messages[0].Attachments) > 0 || // attach (thumbnail형태)로 link 존재
+		len(p.FindString(messages[0].Text)) > 0 // thumbnail이 없는 link
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -17,16 +18,18 @@ import (
 )
 
 var (
-	slackArchiveArgChannel = "channel"
-	// slackArchiveArgFromDate = "from-date"
-	// slackArchiveArgToDate   = "to-date"
+	slackArchiveArgChannel  = "channel"
+	slackArchiveArgFromDate = "from-date"
+	slackArchiveArgToDate   = "to-date"
+	slackArchiveArgFilter   = "filter"
 
 	commandArchive *cli.Command = &cli.Command{
 		Name: "archive",
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: slackArchiveArgChannel, Required: true},
-			// &cli.TimestampFlag{Name: slackArchiveArgFromDate, Layout: dateLayout},
-			// &cli.TimestampFlag{Name: slackArchiveArgToDate, Layout: dateLayout},
+			&cli.TimestampFlag{Name: slackArchiveArgFromDate, Layout: dateLayout},
+			&cli.TimestampFlag{Name: slackArchiveArgToDate, Layout: dateLayout},
+			&cli.StringSliceFlag{Name: slackArchiveArgFilter},
 		},
 		Action: func(ctx *cli.Context) error {
 			slackBotToken := os.Getenv(envSlackBotToken)
@@ -49,6 +52,16 @@ var (
 				return err
 			}
 
+			var negativeFilters []slackclient.ArchiveFilter
+			negatives := map[string]slackclient.ArchiveFilter{"no-link": slackclient.NoLinkFilter{}}
+			for _, f := range ctx.StringSlice(slackArchiveArgFilter) {
+				filter, ok := negatives[f]
+				if !ok {
+					return fmt.Errorf("no adequate filter for %s", f)
+				}
+				negativeFilters = append(negativeFilters, filter)
+			}
+
 			u := crawler.NewUseCase(
 				logger,
 				repository.NewRepository(logger, db),
@@ -57,6 +70,7 @@ var (
 					logger,
 					slack.New(slackBotToken),
 					slackBotToken,
+					negativeFilters,
 				),
 				githubclient.NewClient(
 					logger,
@@ -75,17 +89,25 @@ var (
 
 			channel := ctx.String(slackArchiveArgChannel)
 			now := time.Now()
+			toDate := now
 			weekday := time.Duration(now.Weekday())
 			if weekday == 0 {
 				weekday = 7
 			}
 			year, month, day := now.Date()
 			currentZeroDay := time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
-			dateFrom := currentZeroDay.Add(-1 * (weekday - 1) * 24 * time.Hour)
-			dateFrom = dateFrom.Add(-time.Hour * 24 * 7)
-			logger.Info("date", zap.Any("date", dateFrom))
+			fromDate := currentZeroDay.Add(-1 * (weekday - 1) * 24 * time.Hour)
+			fromDate = fromDate.Add(-time.Hour * 24 * 7)
 
-			err = u.Archive(channel, dateFrom, now)
+			if ctx.Timestamp(slackArchiveArgFromDate) != nil {
+				fromDate = ctx.Timestamp(slackArchiveArgFromDate).Add(-time.Hour * 9)
+			}
+			if ctx.Timestamp(slackArchiveArgToDate) != nil {
+				toDate = ctx.Timestamp(slackArchiveArgToDate).Add(-time.Hour * 9)
+			}
+
+			logger.Info("date", zap.Time("from_date", fromDate), zap.Time("to_date", toDate))
+			err = u.Archive(channel, fromDate, toDate)
 			if err != nil {
 				logger.Error(
 					"Archive Error",
