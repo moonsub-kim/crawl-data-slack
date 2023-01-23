@@ -8,14 +8,14 @@ import (
 )
 
 var (
-	naverCareerArgQuery  string = "query"
-	naverCareerArgExcept string = "except"
+	naverCareerArgQuery   string = "query"
+	naverCareerArgExclude string = "exclude"
 
 	commandNaverCareer *cli.Command = &cli.Command{
 		Name: "naver-career",
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: naverCareerArgQuery, Required: true},
-			&cli.StringSliceFlag{Name: naverCareerArgExcept},
+			&cli.StringSliceFlag{Name: naverCareerArgExclude},
 		},
 		Action: RunCrawl(
 			func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error) {
@@ -23,7 +23,7 @@ var (
 					logger,
 					channel,
 					ctx.String(naverCareerArgQuery),
-					ctx.StringSlice(naverCareerArgExcept),
+					ctx.StringSlice(naverCareerArgExclude),
 				), nil
 			},
 		),

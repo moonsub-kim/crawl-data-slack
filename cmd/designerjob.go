@@ -8,14 +8,14 @@ import (
 )
 
 var (
-	designerJobArgQuery  string = "query"
-	designerJobArgExcept string = "except"
+	designerJobArgQuery   string = "query"
+	designerJobArgExclude string = "exclude"
 
 	commandDesignerJob *cli.Command = &cli.Command{
 		Name: "designer-job",
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: designerJobArgQuery, Required: true},
-			&cli.StringSliceFlag{Name: designerJobArgExcept},
+			&cli.StringSliceFlag{Name: designerJobArgExclude},
 		},
 		Action: RunCrawl(
 			func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error) {
@@ -23,7 +23,7 @@ var (
 					logger,
 					channel,
 					ctx.String(designerJobArgQuery),
-					ctx.StringSlice(designerJobArgExcept),
+					ctx.StringSlice(designerJobArgExclude),
 				), nil
 			},
 		),

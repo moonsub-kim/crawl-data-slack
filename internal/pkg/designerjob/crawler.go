@@ -16,14 +16,14 @@ type Crawler struct {
 	channel      string
 	eventBuilder eventBuilder
 	query        string
-	excepts      []string
+	excludes     []string
 }
 
 func (c Crawler) GetCrawlerName() string { return "desginer-job" }
 func (c Crawler) GetJobName() string     { return "open-position" }
 
-func (c Crawler) includeExcepts(title string) bool {
-	for _, s := range c.excepts {
+func (c Crawler) isExcludes(title string) bool {
+	for _, s := range c.excludes {
 		if strings.Contains(title, s) {
 			return true
 		}
@@ -50,7 +50,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	lis := doc.Find("div", "class", "con_list").Find("ul").FindAll("li")
 	for _, li := range lis {
 		text := p.ReplaceAllString(li.FullText(), "")
-		if c.includeExcepts(strings.ToLower(text)) {
+		if c.isExcludes(strings.ToLower(text)) {
 			continue
 		}
 
@@ -72,11 +72,11 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return events, nil
 }
 
-func NewCrawler(logger *zap.Logger, channel string, query string, excepts []string) *Crawler {
+func NewCrawler(logger *zap.Logger, channel string, query string, excludes []string) *Crawler {
 	return &Crawler{
-		logger:  logger,
-		channel: channel,
-		query:   url.QueryEscape(query),
-		excepts: excepts,
+		logger:   logger,
+		channel:  channel,
+		query:    url.QueryEscape(query),
+		excludes: excludes,
 	}
 }

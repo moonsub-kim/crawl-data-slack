@@ -10,11 +10,11 @@ import (
 type eventBuilder struct {
 }
 
-func (b eventBuilder) buildEvents(res Response, crawlerName, jobName string, channel string, excepts []string) ([]crawler.Event, error) {
+func (b eventBuilder) buildEvents(res Response, crawlerName, jobName string, channel string, excludes []string) ([]crawler.Event, error) {
 	var events []crawler.Event
 
 	for _, d := range res.Data {
-		if b.includeExcepts(excepts, strings.ToLower(d.Company.Name)) {
+		if b.isExcludes(excludes, strings.ToLower(d.Company.Name)) {
 			continue
 		}
 
@@ -39,8 +39,8 @@ func (b eventBuilder) buildEvents(res Response, crawlerName, jobName string, cha
 	return events, nil
 }
 
-func (b eventBuilder) includeExcepts(excepts []string, company string) bool {
-	for _, s := range excepts {
+func (b eventBuilder) isExcludes(excludes []string, company string) bool {
+	for _, s := range excludes {
 		if strings.Contains(company, s) {
 			return true
 		}
