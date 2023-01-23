@@ -8,12 +8,14 @@ import (
 )
 
 var (
-	wantedArgQuery string = "query"
+	wantedArgQuery  string = "query"
+	wantedArgExcept string = "except"
 
 	commandWanted *cli.Command = &cli.Command{
 		Name: "wanted",
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: wantedArgQuery, Required: true},
+			&cli.StringSliceFlag{Name: wantedArgExcept},
 		},
 		Action: RunCrawl(
 			func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error) {
@@ -21,6 +23,7 @@ var (
 					logger,
 					channel,
 					ctx.String(wantedArgQuery),
+					ctx.StringSlice(wantedArgExcept),
 				), nil
 			},
 		),

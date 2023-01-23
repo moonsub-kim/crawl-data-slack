@@ -16,6 +16,7 @@ type Crawler struct {
 	channel      string
 	eventBuilder eventBuilder
 	query        string
+	excepts      []string
 }
 
 func (c Crawler) GetCrawlerName() string { return "wanted" }
@@ -37,13 +38,14 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	var response Response
 	json.NewDecoder(res.Body).Decode(&response)
 
-	return c.eventBuilder.buildEvents(response, c.GetCrawlerName(), c.GetJobName(), c.channel)
+	return c.eventBuilder.buildEvents(response, c.GetCrawlerName(), c.GetJobName(), c.channel, c.excepts)
 }
 
-func NewCrawler(logger *zap.Logger, channel string, query string) *Crawler {
+func NewCrawler(logger *zap.Logger, channel string, query string, excepts []string) *Crawler {
 	return &Crawler{
 		logger:  logger,
 		channel: channel,
 		query:   url.QueryEscape(query),
+		excepts: excepts,
 	}
 }

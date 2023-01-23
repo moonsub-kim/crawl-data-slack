@@ -70,6 +70,7 @@ var (
 				commandConfluent,
 				commandWanted,
 				commandDesignerJob,
+				commandNaverCareer,
 			},
 		},
 		{

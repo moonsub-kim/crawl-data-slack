@@ -2,6 +2,7 @@ package wanted
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -9,10 +10,14 @@ import (
 type eventBuilder struct {
 }
 
-func (b eventBuilder) buildEvents(res Response, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
+func (b eventBuilder) buildEvents(res Response, crawlerName, jobName string, channel string, excepts []string) ([]crawler.Event, error) {
 	var events []crawler.Event
 
 	for _, d := range res.Data {
+		if b.includeExcepts(excepts, d.Company.Name) {
+			continue
+		}
+
 		events = append(
 			events,
 			crawler.Event{
@@ -32,4 +37,13 @@ func (b eventBuilder) buildEvents(res Response, crawlerName, jobName string, cha
 	}
 
 	return events, nil
+}
+
+func (b eventBuilder) includeExcepts(excepts []string, company string) bool {
+	for _, s := range excepts {
+		if strings.Contains(company, s) {
+			return true
+		}
+	}
+	return false
 }
