@@ -14,7 +14,7 @@ func (b eventBuilder) buildEvents(res Response, crawlerName, jobName string, cha
 	var events []crawler.Event
 
 	for _, d := range res.Data {
-		if b.includeExcepts(excepts, d.Company.Name) {
+		if b.includeExcepts(excepts, strings.ToLower(d.Company.Name)) {
 			continue
 		}
 

@@ -50,7 +50,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	lis := doc.Find("div", "class", "con_list").Find("ul").FindAll("li")
 	for _, li := range lis {
 		text := p.ReplaceAllString(li.FullText(), "")
-		if c.includeExcepts(text) {
+		if c.includeExcepts(strings.ToLower(text)) {
 			continue
 		}
 

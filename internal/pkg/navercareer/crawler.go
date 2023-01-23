@@ -82,7 +82,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		div_info_area := doc.Find("div", "class", "info_area")
 
 		title := strings.TrimSpace(div_title_area.FullText())
-		if c.includeExcepts(title) {
+		if c.includeExcepts(strings.ToLower(title)) {
 			continue
 		}
 
