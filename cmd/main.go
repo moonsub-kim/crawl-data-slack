@@ -12,6 +12,6 @@ func main() {
 	app := &cli.App{
 		Commands: Commands,
 	}
-	retry.DefaultDelay = time.Second
+	retry.DefaultDelay = time.Second * 5
 	app.Run(os.Args)
 }
