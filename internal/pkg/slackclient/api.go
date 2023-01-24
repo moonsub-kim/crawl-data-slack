@@ -196,35 +196,41 @@ func (c Client) ArchivePosts(channel crawler.Channel, from time.Time, to time.Ti
 }
 
 func (c Client) Notify(n crawler.Notification) error {
-	withRetry := func(channelID string, opts ...slack.MsgOption) error {
-		return retry.Do(func() error {
+	withRetry := func(channelID string, opts ...slack.MsgOption) (string, error) {
+		var ts string
+		err := retry.Do(func() error {
+			var err error
 			time.Sleep(time.Second)
-			_, _, err := c.api.PostMessage(channelID, opts...)
+			_, ts, err = c.api.PostMessage(channelID, opts...)
 			c.logger.Debug("PostMessage", zap.Error(err))
 			return err
 		})
-	}
-
-	// short message
-	if len(n.Event.Message) < 10000 {
-		err := withRetry(n.User.ID, slack.MsgOptionText(n.Event.Message, false))
-		c.logger.Info(
-			"notify",
-			zap.Any("notification", n),
-			zap.Any("err", err),
-		)
-		return err
-	}
-
-	lines := strings.Split(n.Event.Message, "\n")
-	for from := 0; from < len(lines); from += 6 {
-		to := from + 6
-		if to > len(lines) {
-			to = len(lines)
+		if err != nil {
+			return "", err
 		}
+		return ts, nil
+	}
 
-		text := strings.Join(lines[from:to], "\n")
-		err := withRetry(n.User.ID, slack.MsgOptionText(text, false))
+	var lines []string
+	if len(n.Event.Message) > 10000 { // long message
+		linesByNewLine := strings.Split(n.Event.Message, "\n")
+		for from := 0; from < len(linesByNewLine); from += 6 { // 6줄단위로 쪼갬
+			to := from + 6
+			if to > len(linesByNewLine) {
+				to = len(linesByNewLine)
+			}
+			lines = append(lines, strings.Join(lines[from:to], "\n"))
+		}
+	} else { // short message
+		lines = append(lines, n.Event.Message)
+	}
+
+	var ts string
+	for _, text := range lines {
+		tsNew, err := withRetry(n.User.ID, slack.MsgOptionText(text, false), slack.MsgOptionTS(ts))
+		if ts == "" {
+			ts = tsNew // thread reply를 하기 위해, 첫 message의 ts만 저장
+		}
 		c.logger.Info(
 			"notify",
 			zap.Any("notification", n),
