@@ -64,6 +64,7 @@ var (
 						commandHackerNews,
 						commandQuastor,
 						commandDeliveryHero,
+						commandNaverD2,
 					},
 				},
 				commandRSS,

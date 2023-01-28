@@ -16,7 +16,8 @@ var (
 	rssArgCategoryContains string = "category-contains"
 	rssArgURLContains      string = "url-contains"
 	rssArgRecentDays       string = "recent-days"
-	rssFetchRSS            string = "fetch-rss"
+	rssArgFetchRSS         string = "fetch-rss"
+	rssArgTechBlogPosts    string = "tech-blog-posts"
 
 	commandRSS *cli.Command = &cli.Command{
 		Name: "rss",
@@ -26,7 +27,8 @@ var (
 			&cli.StringFlag{Name: rssArgCategoryContains},
 			&cli.StringFlag{Name: rssArgURLContains},
 			&cli.Int64Flag{Name: rssArgRecentDays},
-			&cli.BoolFlag{Name: rssFetchRSS},
+			&cli.BoolFlag{Name: rssArgFetchRSS},
+			&cli.BoolFlag{Name: rssArgTechBlogPosts},
 		},
 		Action: RunCrawl(
 			func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error) {
@@ -44,8 +46,12 @@ var (
 					opts = append(opts, rss.WithRecentTransformer(t))
 				}
 
-				if fetchRSS := ctx.Bool(rssFetchRSS); fetchRSS {
+				if ctx.Bool(rssArgFetchRSS) {
 					opts = append(opts, rss.WithFetchRSSTransformer())
+				}
+
+				if ctx.Bool(rssArgTechBlogPosts) {
+					opts = append(opts, rss.WithTechBlogPostsTransformer())
 				}
 
 				return rss.NewCrawler(

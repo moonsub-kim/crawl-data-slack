@@ -1,7 +1,7 @@
 package rss
 
 import (
-	"regexp"
+	"fmt"
 	"strings"
 	"time"
 
@@ -22,12 +22,12 @@ type transformer struct {
 	parsed string
 }
 
-func (f *transformer) Reason() string {
-	return f.reason
+func (t *transformer) Reason() string {
+	return t.reason
 }
 
-func (f *transformer) String() string {
-	return f.parsed
+func (t *transformer) String() string {
+	return t.parsed
 }
 
 type categoryMustContainsTransformer struct {
@@ -36,9 +36,9 @@ type categoryMustContainsTransformer struct {
 	categories []string
 }
 
-func (f *categoryMustContainsTransformer) Transform(item *gofeed.Item) *gofeed.Item {
+func (t *categoryMustContainsTransformer) Transform(item *gofeed.Item) *gofeed.Item {
 	joined := strings.Join(item.Categories, ",")
-	for _, c := range f.categories {
+	for _, c := range t.categories {
 		if strings.Contains(joined, c) {
 			return nil
 		}
@@ -49,10 +49,7 @@ func (f *categoryMustContainsTransformer) Transform(item *gofeed.Item) *gofeed.I
 
 func WithCategoryMustContainsTransformer(categories []string) CrawlerOption {
 	return func(c *Crawler) {
-		c.transformers = append(
-			c.transformers,
-			&categoryMustContainsTransformer{categories: categories},
-		)
+		c.transformers = append(c.transformers, &categoryMustContainsTransformer{categories: categories})
 	}
 }
 
@@ -62,8 +59,8 @@ type urlMustContainsTransformer struct {
 	keywords []string
 }
 
-func (f *urlMustContainsTransformer) Transform(item *gofeed.Item) *gofeed.Item {
-	for _, k := range f.keywords {
+func (t *urlMustContainsTransformer) Transform(item *gofeed.Item) *gofeed.Item {
+	for _, k := range t.keywords {
 		if strings.Contains(item.Link, k) {
 			return nil
 		}
@@ -74,10 +71,7 @@ func (f *urlMustContainsTransformer) Transform(item *gofeed.Item) *gofeed.Item {
 
 func WithURLMustContainsTransformer(keywords []string) CrawlerOption {
 	return func(c *Crawler) {
-		c.transformers = append(
-			c.transformers,
-			&urlMustContainsTransformer{keywords: keywords},
-		)
+		c.transformers = append(c.transformers, &urlMustContainsTransformer{keywords: keywords})
 	}
 }
 
@@ -87,29 +81,23 @@ type recentTransformer struct {
 	time time.Time
 }
 
-func (f *recentTransformer) Transform(item *gofeed.Item) *gofeed.Item {
-	if item.PublishedParsed != nil && item.PublishedParsed.Before(f.time) {
+func (t *recentTransformer) Transform(item *gofeed.Item) *gofeed.Item {
+	if item.PublishedParsed != nil && item.PublishedParsed.Before(t.time) {
 		return item
 	}
 	return nil
 }
 
 func WithRecentTransformer(t time.Time) CrawlerOption {
-	return func(c *Crawler) {
-		c.transformers = append(
-			c.transformers,
-			&recentTransformer{time: t},
-		)
-	}
+	return func(c *Crawler) { c.transformers = append(c.transformers, &recentTransformer{time: t}) }
 }
 
 type fetchRSSTransformer struct {
 	transformer
-
-	adRegex *regexp.Regexp
+	// adRegex *regexp.Regexp
 }
 
-func (f *fetchRSSTransformer) Transform(item *gofeed.Item) *gofeed.Item {
+func (t *fetchRSSTransformer) Transform(item *gofeed.Item) *gofeed.Item {
 	item.Title = "" // Remove duplicated title with description
 	element := soup.HTMLParse("<html>" + item.Description + "</html>")
 
@@ -126,10 +114,19 @@ func (f *fetchRSSTransformer) Transform(item *gofeed.Item) *gofeed.Item {
 }
 
 func WithFetchRSSTransformer() CrawlerOption {
-	return func(c *Crawler) {
-		c.transformers = append(
-			c.transformers,
-			&fetchRSSTransformer{},
-		)
-	}
+	return func(c *Crawler) { c.transformers = append(c.transformers, &fetchRSSTransformer{}) }
+}
+
+type techblogPostsTransformer struct {
+	transformer
+}
+
+// 회사명을 title head에 넣어준다.
+func (t *techblogPostsTransformer) Transform(item *gofeed.Item) *gofeed.Item {
+	item.Title = fmt.Sprintf("[%s] %s", item.Author.Name, item.Title)
+	return item
+}
+
+func WithTechBlogPostsTransformer() CrawlerOption {
+	return func(c *Crawler) { c.transformers = append(c.transformers, &techblogPostsTransformer{}) }
 }
