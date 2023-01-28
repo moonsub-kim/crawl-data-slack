@@ -82,7 +82,7 @@ type recentTransformer struct {
 }
 
 func (t *recentTransformer) Transform(item *gofeed.Item) *gofeed.Item {
-	if item.PublishedParsed != nil && item.PublishedParsed.Before(t.time) {
+	if item.PublishedParsed != nil && item.PublishedParsed.After(t.time) {
 		return item
 	}
 	return nil
