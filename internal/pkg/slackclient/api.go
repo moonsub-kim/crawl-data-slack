@@ -211,22 +211,38 @@ func (c Client) Notify(n crawler.Notification) error {
 		return ts, nil
 	}
 
-	var lines []string
-	if len(n.Event.Message) > 10000 { // long message
+	var messages []string
+	if n.Event.Crawler == "hankyung" {
+		linesByNewLine := strings.Split(n.Event.Message, "\n")
+		originalURL := linesByNewLine[0]
+		messages = []string{fmt.Sprintf("<%s|[김현석의 월스트리트 나우] %s>", originalURL, n.Event.Name)}
+		var buffer string
+		// 이미지-텍스트 패턴이므로 이미지가 발견되면 이전 버퍼를 메시지로 만듦
+		for _, l := range linesByNewLine[1:] {
+			if strings.Contains(l, "img.hankyung.com") {
+				messages = append(messages, buffer)
+				buffer = ""
+			}
+			buffer += l + "\n"
+		}
+	} else if len(n.Event.Message) > 10000 { // long message
 		linesByNewLine := strings.Split(n.Event.Message, "\n")
 		for from := 0; from < len(linesByNewLine); from += 6 { // 6줄단위로 쪼갬
 			to := from + 6
-			if to > len(linesByNewLine) {
+			if to >= len(linesByNewLine) {
 				to = len(linesByNewLine)
 			}
-			lines = append(lines, strings.Join(lines[from:to], "\n"))
+			messages = append(messages, strings.Join(linesByNewLine[from:to], "\n"))
 		}
 	} else { // short message
-		lines = append(lines, n.Event.Message)
+		messages = append(messages, n.Event.Message)
 	}
 
 	var ts string
-	for _, text := range lines {
+	for _, text := range messages {
+		if strings.TrimSpace(text) == "" {
+			continue
+		}
 		tsNew, err := withRetry(n.User.ID, slack.MsgOptionText(text, false), slack.MsgOptionTS(ts))
 		if ts == "" {
 			ts = tsNew // thread reply를 하기 위해, 첫 message의 ts만 저장
