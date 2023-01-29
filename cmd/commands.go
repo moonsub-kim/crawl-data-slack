@@ -67,11 +67,17 @@ var (
 						commandNaverD2,
 					},
 				},
+				{
+					Name: "career",
+					Subcommands: []*cli.Command{
+						commandWanted,
+						commandDesignerJob,
+						commandNaverCareer,
+					},
+				},
 				commandRSS,
 				commandConfluent,
-				commandWanted,
-				commandDesignerJob,
-				commandNaverCareer,
+				commandLotteCinema,
 			},
 		},
 		{
