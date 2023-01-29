@@ -22,6 +22,7 @@ init: ## init creates .env file to inject environment variables
 # make up cmd="crawl --channel CHANNEL tech delivery-hero"
 # make up cmd="crawl --channel CHANNEL rss --name amazon-science --site https://www.amazon.science/index.rss --url-contains /latest-news/,/blog/ --recent-days 3"
 # make up cmd="crawl --channel CHANNEL rss --name tech-blog-posts --site https://techblogposts.com/rss.xml --recent-days 1 --tech-blog-posts"
+# make up cmd="crawl --channel CHANNEL lotte-cinema --date 2023-01-30"
 # make up cmd="crawl --channel CHANNEL career wanted --query 'data analyst'"
 # make up cmd="crawl --channel CHANNEL career wanted --query 'data scientist'"
 # make up cmd="crawl --channel CHANNEL career wanted --query 'data engineer'"
