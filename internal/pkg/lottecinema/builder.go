@@ -21,7 +21,14 @@ func (b eventBuilder) buildEvents(items []Item, crawlerName, jobName string, cha
 				UserName: channel,
 				UID:      id,
 				Name:     id,
-				Message:  fmt.Sprintf("%s // 자리 %d/%d", id, i.BookingSeatCount, i.TotalSeatCount),
+				Message: fmt.Sprintf(
+					"%s %s %s // 자리 %d/%d",
+					i.FilmNameKR,
+					i.ScreenDivisionNameKR,
+					id,
+					i.BookingSeatCount,
+					i.TotalSeatCount,
+				),
 			},
 		)
 	}
