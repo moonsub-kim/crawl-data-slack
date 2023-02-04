@@ -9,7 +9,7 @@ import (
 
 var (
 	wantedArgQuery   string = "query"
-	wantedArgExclude string = "except"
+	wantedArgExclude string = "exclude"
 
 	commandWanted *cli.Command = &cli.Command{
 		Name: "wanted",

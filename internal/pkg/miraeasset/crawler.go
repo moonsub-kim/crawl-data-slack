@@ -32,13 +32,14 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 	doc := soup.HTMLParse(res)
 
+	p := regexp.MustCompile("\n+")
 	trs := doc.Find("table", "class", "bbs_linetype2").Find("tbody").FindAll("tr")
 	for _, tr := range trs {
 		tds := tr.FindAll("td")
 		date := strings.TrimSpace(tds[0].Text())
 		a := tds[1].Find("div", "class", "subject").Find("a")
 
-		title := strings.ReplaceAll(strings.TrimSpace(a.FullText()), "\n", " ")
+		title := p.ReplaceAllString(strings.TrimSpace(a.FullText()), "\n")
 		parsed := strings.Split(a.Attrs()["href"], "'")
 		id := parsed[1]
 		number := parsed[3]

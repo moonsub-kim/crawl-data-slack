@@ -2,6 +2,7 @@ package globalmonitor
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -35,7 +36,7 @@ func (b eventBuilder) buildMessage(report Report) string {
 		report.Company,
 		report.Date,
 		fmt.Sprintf("https://rreport.einfomax.co.kr/report/%s.pdf", report.ID),
-		report.Text,
+		strings.ReplaceAll(report.Text, "<br/>", "\n"),
 	)
 	// m := map[string]interface{}{
 	// 	"blocks": []slack.Block{

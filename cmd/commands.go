@@ -42,6 +42,12 @@ var (
 
 	Commands = []*cli.Command{
 		{
+			Name: "maintenance",
+			Subcommands: []*cli.Command{
+				commandRemoveOldEvents,
+			},
+		},
+		{
 			Name: "crawl",
 			Flags: []cli.Flag{
 				&cli.StringFlag{Name: crawlArgChannel},
@@ -142,7 +148,7 @@ func getChromeURL(logger *zap.Logger, chromeHost string) (string, error) {
 	return u.String(), nil
 }
 
-func zapLogger() *zap.Logger {
+func zapLogger(ctx *cli.Context) *zap.Logger {
 	isDebug := os.Getenv(envIsDeubg) != ""
 	// Create logger configuration
 	encoderCfg := zap.NewProductionEncoderConfig()
@@ -159,6 +165,15 @@ func zapLogger() *zap.Logger {
 		zapcore.Lock(os.Stdout),
 		level,
 	))
+
+	kv := map[string]string{}
+	for _, k := range ctx.FlagNames() {
+		kv[k] = ctx.String(k)
+	}
+	zapLogger.Info(
+		"flags",
+		zap.Any("flags", kv),
+	)
 
 	return zapLogger
 }
@@ -223,16 +238,7 @@ func RunGithub(f runGithubCommandFunc) func(ctx *cli.Context) error {
 	return func(ctx *cli.Context) error {
 		githubToken := os.Getenv(envGithubToken)
 
-		logger := zapLogger()
-
-		kv := map[string]string{}
-		for _, k := range ctx.FlagNames() {
-			kv[k] = ctx.String(k)
-		}
-		logger.Info(
-			"flags",
-			zap.Any("flags", kv),
-		)
+		logger := zapLogger(ctx)
 
 		client := githubclient.NewClient(
 			logger,
@@ -258,16 +264,7 @@ func RunCrawl(initCrawler initCrawlerFunc) func(ctx *cli.Context) error {
 	return func(ctx *cli.Context) error {
 		slackBotToken := os.Getenv(envSlackBotToken)
 
-		logger := zapLogger()
-
-		kv := map[string]string{}
-		for _, k := range ctx.FlagNames() {
-			kv[k] = ctx.String(k)
-		}
-		logger.Info(
-			"flags",
-			zap.Any("flags", kv),
-		)
+		logger := zapLogger(ctx)
 
 		c, err := initCrawler(ctx, logger, ctx.String(crawlArgChannel))
 		if err != nil {

@@ -9,7 +9,6 @@ import (
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/slackclient"
 	"github.com/slack-go/slack"
 	"github.com/urfave/cli/v2"
-	"go.uber.org/zap"
 )
 
 var (
@@ -29,16 +28,7 @@ var (
 		Action: func(ctx *cli.Context) error {
 			slackBotToken := os.Getenv(envSlackBotToken)
 
-			logger := zapLogger()
-
-			kv := map[string]string{}
-			for _, k := range ctx.FlagNames() {
-				kv[k] = ctx.String(k)
-			}
-			logger.Info(
-				"flags",
-				zap.Any("flags", kv),
-			)
+			logger := zapLogger(ctx)
 
 			var negativeFilters []slackclient.ArchiveFilter
 			negatives := map[string]slackclient.ArchiveFilter{"no-link": slackclient.NoLinkFilter{}}

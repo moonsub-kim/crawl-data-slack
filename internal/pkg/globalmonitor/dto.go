@@ -10,7 +10,7 @@ type DTO struct {
 type Report struct {
 	ID      string `json:"secureId"`
 	Company string `json:"auth"`
-	Text    string `json:"summary"`
+	Text    string `json:"summaryHtml"`
 	Title   string `json:"title"`
 	Date    string `json:"writeDate"`
 

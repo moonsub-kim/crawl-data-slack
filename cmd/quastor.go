@@ -8,6 +8,8 @@ import (
 )
 
 var (
+	quastorArgRecentDays string = "recent-days"
+
 	commandQuastor *cli.Command = &cli.Command{
 		Name: "quastor",
 		Action: RunCrawl(

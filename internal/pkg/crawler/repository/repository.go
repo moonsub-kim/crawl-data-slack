@@ -3,10 +3,12 @@ package repository
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Repository struct {
@@ -56,6 +58,21 @@ func (r Repository) SyncChannels(channels []crawler.Channel) error {
 
 	modelChannels := r.mapper.mapChannelsToModelChannels(channels)
 	return r.db.Clauses().Create(&modelChannels).Error
+}
+
+func (r Repository) RemoveOldEvents(before time.Time) (int, error) {
+	var events []Event
+	err := r.db.
+		Clauses(clause.Returning{}).
+		Where("created_at < ?", before).
+		Delete(&events).
+		Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return len(events), nil
 }
 
 func NewRepository(logger *zap.Logger, db *gorm.DB) *Repository {

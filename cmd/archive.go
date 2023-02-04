@@ -35,16 +35,7 @@ var (
 			slackBotToken := os.Getenv(envSlackBotToken)
 			githubToken := os.Getenv(envGithubToken)
 
-			logger := zapLogger()
-
-			kv := map[string]string{}
-			for _, k := range ctx.FlagNames() {
-				kv[k] = ctx.String(k)
-			}
-			logger.Info(
-				"flags",
-				zap.Any("flags", kv),
-			)
+			logger := zapLogger(ctx)
 
 			db, err := openDB(logger)
 			if err != nil {
