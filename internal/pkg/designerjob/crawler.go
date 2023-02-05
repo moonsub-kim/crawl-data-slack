@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/anaskhan96/soup"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
@@ -12,11 +13,10 @@ import (
 )
 
 type Crawler struct {
-	logger       *zap.Logger
-	channel      string
-	eventBuilder eventBuilder
-	query        string
-	excludes     []string
+	logger   *zap.Logger
+	channel  string
+	query    string
+	excludes []string
 }
 
 func (c Crawler) GetCrawlerName() string { return "desginer-job" }
@@ -59,12 +59,13 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  c.GetCrawlerName(),
-				Job:      c.GetJobName(),
-				UserName: c.channel,
-				UID:      url,
-				Name:     text,
-				Message:  fmt.Sprintf("<%s|%s>", url, text),
+				Crawler:   c.GetCrawlerName(),
+				Job:       c.GetJobName(),
+				UserName:  c.channel,
+				UID:       url,
+				Name:      text,
+				EventTime: time.Now(),
+				Message:   fmt.Sprintf("<%s|%s>", url, text),
 			},
 		)
 	}

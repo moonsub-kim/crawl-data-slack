@@ -2,6 +2,7 @@ package deliveryhero
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -19,12 +20,13 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  crawlerName,
-				Job:      jobName,
-				UserName: channel,
-				UID:      name,
-				Name:     name,
-				Message:  fmt.Sprintf("DeliveryHero <%s|%s>", dto.URL, dto.Name),
+				Crawler:   crawlerName,
+				Job:       jobName,
+				UserName:  channel,
+				UID:       name,
+				Name:      name,
+				EventTime: time.Now(),
+				Message:   fmt.Sprintf("DeliveryHero <%s|%s>", dto.URL, dto.Name),
 			},
 		)
 	}

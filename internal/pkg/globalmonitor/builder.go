@@ -3,6 +3,7 @@ package globalmonitor
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -10,18 +11,26 @@ import (
 type eventBuilder struct {
 }
 
+const DATE_PARSE_FORMAT string = "2006/01/02"
+
 func (b eventBuilder) buildEvents(dto DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event
 	for _, report := range dto.ReportList {
+		eventTIme, err := time.Parse(DATE_PARSE_FORMAT, report.Date)
+		if err != nil {
+			return nil, err
+		}
+
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  crawlerName,
-				Job:      jobName,
-				UserName: channel,
-				UID:      report.Title,
-				Name:     jobName,
-				Message:  b.buildMessage(report),
+				Crawler:   crawlerName,
+				Job:       jobName,
+				UserName:  channel,
+				UID:       report.Title,
+				Name:      jobName,
+				EventTime: eventTIme,
+				Message:   b.buildMessage(report),
 			},
 		)
 	}

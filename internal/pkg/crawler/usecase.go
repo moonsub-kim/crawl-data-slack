@@ -15,8 +15,10 @@ type UseCase struct {
 	archive    Archive
 }
 
+var EMPTY_TIME = time.Time{}
+
 // TODO rename
-func (u UseCase) Work() error {
+func (u UseCase) Work(after time.Time) error {
 	crawledEvents, err := u.crawler.Crawl()
 	if err != nil {
 		return err
@@ -27,7 +29,7 @@ func (u UseCase) Work() error {
 		zap.Any("events", crawledEvents),
 	)
 
-	events, err := u.filterEvents(crawledEvents)
+	events, err := u.filterEvents(crawledEvents, after)
 	if err != nil {
 		return err
 	}
@@ -36,9 +38,17 @@ func (u UseCase) Work() error {
 }
 
 // save events and returns saved events
-func (u UseCase) filterEvents(crawledEvents []Event) ([]Event, error) {
+func (u UseCase) filterEvents(crawledEvents []Event, after time.Time) ([]Event, error) {
 	var events []Event
 	for _, e := range crawledEvents {
+		if e.EventTime == EMPTY_TIME {
+			return nil, errors.New("empty EventTime")
+		}
+
+		if !e.EventTime.After(after) {
+			continue
+		}
+
 		err := u.repository.SaveEvent(e)
 		if errors.As(err, &AlreadyExistsError{}) {
 			continue

@@ -3,7 +3,6 @@ package rss
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/anaskhan96/soup"
 	"github.com/mmcdole/gofeed"
@@ -73,23 +72,6 @@ func WithURLMustContainsTransformer(keywords []string) CrawlerOption {
 	return func(c *Crawler) {
 		c.transformers = append(c.transformers, &urlMustContainsTransformer{keywords: keywords})
 	}
-}
-
-type recentTransformer struct {
-	transformer
-
-	time time.Time
-}
-
-func (t *recentTransformer) Transform(item *gofeed.Item) *gofeed.Item {
-	if item.PublishedParsed != nil && item.PublishedParsed.After(t.time) {
-		return item
-	}
-	return nil
-}
-
-func WithRecentTransformer(t time.Time) CrawlerOption {
-	return func(c *Crawler) { c.transformers = append(c.transformers, &recentTransformer{time: t}) }
 }
 
 type fetchRSSTransformer struct {

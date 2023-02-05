@@ -2,6 +2,7 @@ package navercareer
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -15,11 +16,12 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  crawlerName,
-				Job:      jobName,
-				UserName: channel,
-				UID:      d.Title,
-				Name:     d.Title,
+				Crawler:   crawlerName,
+				Job:       jobName,
+				UserName:  channel,
+				UID:       d.Title,
+				Name:      d.Title,
+				EventTime: time.Now(),
 				Message: fmt.Sprintf(
 					"<%s|%s>\n> %s",
 					d.URL,

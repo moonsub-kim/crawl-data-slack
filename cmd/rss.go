@@ -2,7 +2,6 @@ package main
 
 import (
 	"strings"
-	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/rss"
@@ -15,7 +14,6 @@ var (
 	rssArgSite             string = "site"
 	rssArgCategoryContains string = "category-contains"
 	rssArgURLContains      string = "url-contains"
-	rssArgRecentDays       string = "recent-days"
 	rssArgFetchRSS         string = "fetch-rss"
 	rssArgTechBlogPosts    string = "tech-blog-posts"
 
@@ -26,7 +24,6 @@ var (
 			&cli.StringFlag{Name: rssArgSite, Required: true},
 			&cli.StringFlag{Name: rssArgCategoryContains},
 			&cli.StringFlag{Name: rssArgURLContains},
-			&cli.Int64Flag{Name: rssArgRecentDays},
 			&cli.BoolFlag{Name: rssArgFetchRSS},
 			&cli.BoolFlag{Name: rssArgTechBlogPosts},
 		},
@@ -39,11 +36,6 @@ var (
 
 				if categoryContains := ctx.String(rssArgCategoryContains); categoryContains != "" {
 					opts = append(opts, rss.WithCategoryMustContainsTransformer(strings.Split(categoryContains, ",")))
-				}
-
-				if recent := ctx.Int64(rssArgRecentDays); recent != 0 {
-					t := time.Now().Add(time.Duration(-recent) * time.Hour * 24)
-					opts = append(opts, rss.WithRecentTransformer(t))
 				}
 
 				if ctx.Bool(rssArgFetchRSS) {

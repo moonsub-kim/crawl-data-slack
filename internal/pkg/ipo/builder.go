@@ -2,6 +2,7 @@ package ipo
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -26,11 +27,12 @@ func (b eventBuilder) parse(companies []Company, crawlerName, jobName string, ch
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  crawlerName,
-				Job:      jobName,
-				UserName: channel,
-				UID:      d.Name,
-				Name:     d.Name,
+				Crawler:   crawlerName,
+				Job:       jobName,
+				UserName:  channel,
+				UID:       d.Name,
+				Name:      d.Name,
+				EventTime: time.Now(),
 				Message: fmt.Sprintf(
 					"%s(%s) 상장예정! 공모청약기간 (%s ~ %s) <%s|dart>",
 					d.Name,

@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"reflect"
+	"time"
 
 	"github.com/google/go-github/v49/github"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
@@ -35,7 +36,8 @@ var (
 	envSlackBotToken = "SLACK_BOT_TOKEN"
 	envGithubToken   = "GITHUB_TOKEN"
 
-	crawlArgChannel = "channel"
+	crawlArgChannel    = "channel"
+	crawlArgRecentDays = "recent-days"
 
 	githubArgOwner = "owner"
 	githubArgRepo  = "repo"
@@ -51,6 +53,7 @@ var (
 			Name: "crawl",
 			Flags: []cli.Flag{
 				&cli.StringFlag{Name: crawlArgChannel},
+				&cli.IntFlag{Name: crawlArgRecentDays, DefaultText: "5"},
 			},
 			Subcommands: []*cli.Command{
 				{
@@ -263,10 +266,13 @@ type initCrawlerFunc func(ctx *cli.Context, logger *zap.Logger, channel string) 
 func RunCrawl(initCrawler initCrawlerFunc) func(ctx *cli.Context) error {
 	return func(ctx *cli.Context) error {
 		slackBotToken := os.Getenv(envSlackBotToken)
+		channel := ctx.String(crawlArgChannel)
+		recentDays := ctx.Int(crawlArgRecentDays)
+		after := time.Now().Add(time.Duration(-recentDays) * time.Hour * 24)
 
 		logger := zapLogger(ctx)
 
-		c, err := initCrawler(ctx, logger, ctx.String(crawlArgChannel))
+		c, err := initCrawler(ctx, logger, channel)
 		if err != nil {
 			return err
 		}
@@ -289,7 +295,7 @@ func RunCrawl(initCrawler initCrawlerFunc) func(ctx *cli.Context) error {
 			nil,
 		)
 
-		err = u.Work()
+		err = u.Work(after)
 		if err != nil {
 			logger.Error(
 				"Work Error",

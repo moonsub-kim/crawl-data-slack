@@ -2,6 +2,7 @@ package lottecinema
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -16,11 +17,12 @@ func (b eventBuilder) buildEvents(items []Item, crawlerName, jobName string, cha
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  crawlerName,
-				Job:      jobName,
-				UserName: channel,
-				UID:      id,
-				Name:     id,
+				Crawler:   crawlerName,
+				Job:       jobName,
+				UserName:  channel,
+				UID:       id,
+				Name:      id,
+				EventTime: time.Now(),
 				Message: fmt.Sprintf(
 					"%s %s %s // 자리 %d/%d",
 					i.FilmNameKR,

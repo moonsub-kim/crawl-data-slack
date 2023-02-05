@@ -3,6 +3,7 @@ package hackernews
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -38,11 +39,12 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  crawlerName,
-				Job:      jobName,
-				UserName: channel,
-				UID:      dto.ID,
-				Name:     "news",
+				Crawler:   crawlerName,
+				Job:       jobName,
+				UserName:  channel,
+				UID:       dto.ID,
+				Name:      "news",
+				EventTime: time.Now(), // TODO exact event time
 				Message: fmt.Sprintf(
 					"<%s|%s>\n(<%s|%s>)",
 					dto.URL,

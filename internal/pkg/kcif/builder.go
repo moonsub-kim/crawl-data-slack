@@ -2,6 +2,7 @@ package kcif
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -15,11 +16,12 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  crawlerName,
-				Job:      jobName,
-				UserName: channel,
-				UID:      d.ID,
-				Name:     d.Title,
+				Crawler:   crawlerName,
+				Job:       jobName,
+				UserName:  channel,
+				UID:       d.ID,
+				Name:      d.Title,
+				EventTime: time.Now(),
 				Message: fmt.Sprintf(
 					"[%s] 국제금융센터 *%s*, <%s|PDF 보기>\n> %s",
 					d.Date,

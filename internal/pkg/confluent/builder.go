@@ -2,6 +2,7 @@ package confluent
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -15,12 +16,13 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  crawlerName,
-				Job:      jobName,
-				UserName: channel,
-				UID:      dto.Date,
-				Name:     dto.Date,
-				Message:  fmt.Sprintf("%s\n<%s|RELEASE NOTE>", dto.Content, url),
+				Crawler:   crawlerName,
+				Job:       jobName,
+				UserName:  channel,
+				UID:       dto.Date,
+				Name:      dto.Date,
+				EventTime: time.Now(),
+				Message:   fmt.Sprintf("%s\n<%s|RELEASE NOTE>", dto.Content, url),
 			},
 		)
 	}

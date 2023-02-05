@@ -2,6 +2,7 @@ package quastor
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -15,12 +16,13 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  crawlerName,
-				Job:      jobName,
-				UserName: channel,
-				UID:      dto.Name,
-				Name:     dto.Name,
-				Message:  fmt.Sprintf("[%s] Quastor <%s|%s>", dto.Date, dto.URL, dto.Name),
+				Crawler:   crawlerName,
+				Job:       jobName,
+				UserName:  channel,
+				UID:       dto.Name,
+				Name:      dto.Name,
+				EventTime: time.Now(),
+				Message:   fmt.Sprintf("[%s] Quastor <%s|%s>", dto.Date, dto.URL, dto.Name),
 			},
 		)
 	}

@@ -8,19 +8,13 @@ import (
 )
 
 var (
-	goldmanSachsArgRecentDays string = "recent-days"
-
 	commandGoldmanSachs *cli.Command = &cli.Command{
 		Name: "goldman-sachs",
-		Flags: []cli.Flag{
-			&cli.IntFlag{Name: goldmanSachsArgRecentDays, Required: false},
-		},
 		Action: RunCrawl(
 			func(ctx *cli.Context, logger *zap.Logger, channel string) (crawler.Crawler, error) {
 				return goldmansachs.NewCrawler(
 					logger,
 					channel,
-					ctx.Int64(goldmanSachsArgRecentDays),
 				), nil
 			},
 		),

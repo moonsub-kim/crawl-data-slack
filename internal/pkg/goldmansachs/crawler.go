@@ -2,7 +2,6 @@ package goldmansachs
 
 import (
 	"strings"
-	"time"
 
 	"github.com/anaskhan96/soup"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
@@ -19,7 +18,6 @@ type Crawler struct {
 
 const URL string = "https://developer.gs.com/blog/posts"
 const BASE_URL string = "https://developer.gs.com"
-const DATE_PARSE_FORMAT string = "January 2 2006"
 
 func (c Crawler) GetCrawlerName() string { return "goldmansachs" }
 func (c Crawler) GetJobName() string     { return "post" }
@@ -30,8 +28,6 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 
-	t := time.Now().Add(time.Duration(-c.recentDays) * time.Hour * 24)
-
 	doc := soup.HTMLParse(res)
 	as := doc.Find("div", "class", "gs-uitk-c-1c4ow0d").FindAll("a")
 	var dtos []DTO
@@ -40,15 +36,6 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		dateStr := strings.ReplaceAll(spans[0].Text(), ",", "")
 		name := spans[1].Text()
 		url := BASE_URL + a.Attrs()["href"]
-
-		date, err := time.Parse(DATE_PARSE_FORMAT, dateStr)
-		if err != nil {
-			return nil, err
-		}
-
-		if date.Before(t) {
-			continue
-		}
 
 		dtos = append(dtos, DTO{
 			ID:   strings.TrimSpace(name),
@@ -61,10 +48,9 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
 }
 
-func NewCrawler(logger *zap.Logger, channel string, recentDays int64) *Crawler {
+func NewCrawler(logger *zap.Logger, channel string) *Crawler {
 	return &Crawler{
-		logger:     logger,
-		channel:    channel,
-		recentDays: recentDays,
+		logger:  logger,
+		channel: channel,
 	}
 }

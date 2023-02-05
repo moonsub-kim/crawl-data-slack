@@ -3,6 +3,7 @@ package wanted
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -21,11 +22,12 @@ func (b eventBuilder) buildEvents(res Response, crawlerName, jobName string, cha
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  crawlerName,
-				Job:      jobName,
-				UserName: channel,
-				UID:      fmt.Sprintf("%s-%s", d.Company.Name, d.Position),
-				Name:     "position",
+				Crawler:   crawlerName,
+				Job:       jobName,
+				UserName:  channel,
+				UID:       fmt.Sprintf("%s-%s", d.Company.Name, d.Position),
+				Name:      "position",
+				EventTime: time.Now(),
 				Message: fmt.Sprintf(
 					"[%s] %s\n(%s)",
 					d.Company.Name,

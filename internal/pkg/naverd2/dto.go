@@ -10,6 +10,6 @@ type Content struct {
 	Title       string `json:"postTitle"`
 	Image       string `json:"postImage"`
 	HTML        string `json:"postHtml"`
-	PublishedAt int64  `json:"postPublishedAt`
+	PublishedAt int64  `json:"postPublishedAt"`
 	Path        string `json:"url"`
 }

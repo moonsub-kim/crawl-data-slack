@@ -2,6 +2,7 @@ package eomisae
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 )
@@ -15,12 +16,13 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 		events = append(
 			events,
 			crawler.Event{
-				Crawler:  crawlerName,
-				Job:      jobName,
-				UserName: channel,
-				UID:      dto.URL,
-				Name:     jobName,
-				Message:  fmt.Sprintf("<%s|%s>\n%s\n%s", dto.Post, dto.Name, dto.URL, dto.Content),
+				Crawler:   crawlerName,
+				Job:       jobName,
+				UserName:  channel,
+				UID:       dto.URL,
+				Name:      jobName,
+				EventTime: time.Now(),
+				Message:   fmt.Sprintf("<%s|%s>\n%s\n%s", dto.Post, dto.Name, dto.URL, dto.Content),
 			},
 		)
 	}

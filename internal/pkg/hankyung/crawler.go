@@ -5,6 +5,7 @@ import (
 	"html"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/anaskhan96/soup"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
@@ -17,6 +18,7 @@ type Crawler struct {
 }
 
 const URL string = "https://www.hankyung.com/globalmarket/news/wallstreet-now"
+const TIME_PARSE_FORMAT = "2006.01.02 15:04"
 
 func (c Crawler) GetCrawlerName() string { return "hankyung" }
 func (c Crawler) GetJobName() string     { return "wallstreetnow" }
@@ -30,11 +32,14 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 
 	news := doc.Find("div", "class", "list_thumb_rowtype")
 	a := news.Find("h3").Find("a")
-	// datetime := news.Find("span", "class", "time")
+	datetime := news.Find("span", "class", "time")
 
 	title := strings.ReplaceAll(a.FullText(), "회원전용 ", "")
 	url := a.Attrs()["href"]
-	// createdAt := datetime.FullText()
+	eventTime, err := time.Parse(TIME_PARSE_FORMAT, datetime.FullText())
+	if err != nil {
+		return nil, err
+	}
 
 	res, err = soup.Get(url)
 	if err != nil {
@@ -54,12 +59,13 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 
 	return []crawler.Event{
 		{
-			Crawler:  c.GetCrawlerName(),
-			Job:      c.GetJobName(),
-			UserName: c.channel,
-			UID:      title,
-			Name:     title,
-			Message:  fmt.Sprintf("%s\n%s", url, body),
+			Crawler:   c.GetCrawlerName(),
+			Job:       c.GetJobName(),
+			UserName:  c.channel,
+			UID:       title,
+			Name:      title,
+			EventTime: eventTime,
+			Message:   fmt.Sprintf("%s\n%s", url, body),
 		},
 	}, nil
 }

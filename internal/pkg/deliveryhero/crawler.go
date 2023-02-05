@@ -12,8 +12,7 @@ type Crawler struct {
 	logger       *zap.Logger
 	eventBuilder eventBuilder
 
-	channel    string
-	recentDays int64
+	channel string
 }
 
 const URL string = "https://tech.deliveryhero.com/"

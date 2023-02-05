@@ -2,15 +2,17 @@ package crawler
 
 import (
 	"strings"
+	"time"
 )
 
 type Event struct {
-	Crawler  string
-	Job      string
-	UserName string // <firstname>.<lastname>
-	UID      string // UID is determined by Crawler
-	Name     string
-	Message  string
+	Crawler   string
+	Job       string
+	UserName  string // <firstname>.<lastname>
+	UID       string // UID is determined by Crawler
+	Name      string
+	Message   string
+	EventTime time.Time
 }
 
 type Channel struct {
