@@ -47,6 +47,7 @@ var (
 			Name: "maintenance",
 			Subcommands: []*cli.Command{
 				commandRemoveOldEvents,
+				commandMigrateDB,
 			},
 		},
 		{

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler/repository"
@@ -39,6 +40,32 @@ var (
 			)
 
 			return nil
+		},
+	}
+
+	commandMigrateDB *cli.Command = &cli.Command{
+		Name:        "migrate-db",
+		Description: "It moves all data from old db to new db",
+		Action: func(ctx *cli.Context) error {
+			oldDB, err := openPostgres(os.Getenv(envPostgresConn))
+			if err != nil {
+				return err
+			}
+
+			newDB, err := openPostgres(os.Getenv("NEW_POSTGRES_CONN"))
+			if err != nil {
+				return err
+			}
+
+			// Create Schema
+			migrate(newDB)
+
+			var events []repository.Event
+			if oldDB.Find(&events).Error != nil {
+				return err
+			}
+
+			return newDB.Create(&events).Error
 		},
 	}
 )
