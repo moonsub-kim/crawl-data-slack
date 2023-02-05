@@ -34,10 +34,19 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		url := BASE_URL + a.Attrs()["href"]
 		name := a.Find("h4").Text()
 
+		res, err := soup.Get(url)
+		if err != nil {
+			return nil, err
+		}
+
+		doc := soup.HTMLParse(res)
+		date := doc.Find("span", "class", "my-3").Text()
+
 		dtos = append(dtos, DTO{
 			ID:   strings.TrimSpace(name),
 			Name: strings.TrimSpace(name),
 			URL:  strings.TrimSpace(url),
+			Date: date,
 		})
 	}
 

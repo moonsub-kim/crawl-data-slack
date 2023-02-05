@@ -10,6 +10,8 @@ import (
 type eventBuilder struct {
 }
 
+const DATE_PARSE_FORMAT string = "02/01/2006"
+
 func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event
 	for _, dto := range dtos {
@@ -17,6 +19,12 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 		if len(name) > 64 {
 			name = name[:64]
 		}
+
+		date, err := time.Parse(DATE_PARSE_FORMAT, dto.Date)
+		if err != nil {
+			return nil, err
+		}
+
 		events = append(
 			events,
 			crawler.Event{
@@ -25,7 +33,7 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 				UserName:  channel,
 				UID:       name,
 				Name:      name,
-				EventTime: time.Now(), // TODO exact event time
+				EventTime: date,
 				Message:   fmt.Sprintf("DeliveryHero <%s|%s>", dto.URL, dto.Name),
 			},
 		)
