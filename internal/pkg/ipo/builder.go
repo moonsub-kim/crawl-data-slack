@@ -32,7 +32,7 @@ func (b eventBuilder) parse(companies []Company, crawlerName, jobName string, ch
 				UserName:  channel,
 				UID:       d.Name,
 				Name:      d.Name,
-				EventTime: time.Now(),
+				EventTime: time.Now(), // TODO exact event time
 				Message: fmt.Sprintf(
 					"%s(%s) 상장예정! 공모청약기간 (%s ~ %s) <%s|dart>",
 					d.Name,

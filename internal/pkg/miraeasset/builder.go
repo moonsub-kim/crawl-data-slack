@@ -21,7 +21,7 @@ func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, chann
 				UserName:  channel,
 				UID:       d.ID,
 				Name:      d.Title,
-				EventTime: time.Now(),
+				EventTime: time.Now(), // TODO exact event time
 				Message: fmt.Sprintf(
 					"*%s*\n%s %s, <%s|원문 보기>\n> %s",
 					d.Title,

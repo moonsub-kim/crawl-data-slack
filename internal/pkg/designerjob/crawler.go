@@ -64,7 +64,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 				UserName:  c.channel,
 				UID:       url,
 				Name:      text,
-				EventTime: time.Now(),
+				EventTime: time.Now(), // TODO exact event time
 				Message:   fmt.Sprintf("<%s|%s>", url, text),
 			},
 		)

@@ -22,7 +22,7 @@ func (b eventBuilder) buildEvents(items []Item, crawlerName, jobName string, cha
 				UserName:  channel,
 				UID:       id,
 				Name:      id,
-				EventTime: time.Now(),
+				EventTime: time.Now(), // TODO exact event time
 				Message: fmt.Sprintf(
 					"%s %s %s // 자리 %d/%d",
 					i.FilmNameKR,

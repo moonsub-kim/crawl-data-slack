@@ -27,7 +27,7 @@ func (b eventBuilder) buildEvents(res Response, crawlerName, jobName string, cha
 				UserName:  channel,
 				UID:       fmt.Sprintf("%s-%s", d.Company.Name, d.Position),
 				Name:      "position",
-				EventTime: time.Now(),
+				EventTime: time.Now(), // TODO exact event time
 				Message: fmt.Sprintf(
 					"[%s] %s\n(%s)",
 					d.Company.Name,
