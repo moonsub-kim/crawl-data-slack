@@ -81,19 +81,16 @@ func (c Crawler) parseContent(contentURL string) (string, error) {
 	var tabletxt string
 	if table.Error == nil {
 		table.Pointer.Parent.RemoveChild(table.Pointer) // div.FullText()에서 제외되도록 element제거
-		tabletxt = c.parseTable(table)
+		tabletxt = "```\n" + c.parseTable(table) + "```"
 	}
 
-	m := regexp.MustCompile(` +\n`)
-	text := m.ReplaceAllString(strings.TrimSpace(div.FullText()), "")
+	text := strings.TrimSpace(div.FullText())
 
 	c.logger.Info("trim", zap.Any("trim", text))
 
 	m = regexp.MustCompile(`\n+`)
 	text = m.ReplaceAllString("> "+text, "\n> ")
-	if tabletxt != "" {
-		text += "```\n" + tabletxt + "```"
-	}
+	text += tabletxt
 
 	return text, nil
 }
