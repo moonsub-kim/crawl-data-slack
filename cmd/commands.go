@@ -88,6 +88,7 @@ var (
 				commandRSS,
 				commandConfluent,
 				commandLotteCinema,
+				commandInterpark,
 			},
 		},
 		{

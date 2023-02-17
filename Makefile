@@ -58,6 +58,9 @@ run: ## Run the cmd
 	@docker-compose build app
 	@docker-compose run --name crawl-data-slack-run --rm app $(cmd)
 
+docker-upload-m1-arm: ## In apple silicon mac, upload the image to the docker registry `make docker-upload-m1 version=0.x.y`
+	@docker buildx build --platform linux/arm64 --push -t gos16052/crawl-data-slack:$(version) .
+
 docker-upload-m1: ## In apple silicon mac, upload the image to the docker registry `make docker-upload-m1 version=0.x.y`
 	@docker buildx build --platform linux/amd64 --push -t gos16052/crawl-data-slack:$(version) .
 

@@ -88,7 +88,7 @@ func (c Crawler) parseContent(contentURL string) (string, error) {
 
 	c.logger.Info("trim", zap.Any("trim", text))
 
-	m = regexp.MustCompile(`\n+`)
+	m := regexp.MustCompile(`\n+`)
 	text = m.ReplaceAllString("> "+text, "\n> ")
 	text += tabletxt
 
