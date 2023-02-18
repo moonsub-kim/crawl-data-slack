@@ -3,7 +3,6 @@ package kcif
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
@@ -59,7 +58,7 @@ func (c Crawler) request(method string, url string, referrer string, reqBody io.
 	}
 	defer res.Body.Close()
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return "", err
 	}

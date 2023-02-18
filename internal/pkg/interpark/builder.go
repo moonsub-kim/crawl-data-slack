@@ -2,6 +2,7 @@ package interpark
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
@@ -10,34 +11,28 @@ import (
 type eventBuilder struct {
 }
 
-func (b eventBuilder) buildEvents(res Response, crawlerName, jobName string, channel string) []crawler.Event {
+func (b eventBuilder) buildEvents(res Response, date string, crawlerName string, jobName string, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event
+
+	l := []string{"10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"}
+	startValue, err := strconv.Atoi(res.Data.RemainSeat[0].PlaySeq[1:])
+	if err != nil {
+		return nil, err
+	}
+
 	for _, seat := range res.Data.RemainSeat {
 		if seat.RemainCnt == 0 {
 			continue
 		}
-		m := map[string]string{
-			"I11": "10:00",
-			"I12": "10:30",
-			"I13": "11:00",
-			"I14": "11:30",
-			"I15": "12:00",
-			"I16": "12:30",
-			"I17": "13:00",
-			"I18": "13:30",
-			"I19": "14:00",
-			"I20": "14:30",
-			"I21": "15:00",
-			"I22": "15:30",
-			"I23": "16:00",
-			"I24": "16:30",
-			"I25": "17:00",
+
+		t := seat.PlaySeq
+		indexValue, err := strconv.Atoi(seat.PlaySeq[1:])
+		if err == nil && indexValue-startValue < len(l) {
+			t = l[indexValue-startValue]
 		}
-		t, ok := m[seat.PlaySeq]
-		if !ok {
-			t = seat.PlaySeq
-		}
-		id := fmt.Sprintf("%s %s, 생긴 티켓 %d, %v", res.Common.RequestURI, t, seat.RemainCnt, time.Now())
+
+		msg := fmt.Sprintf("`%s %s` 생긴 티켓 %d", date, t, seat.RemainCnt)
+		id := msg + time.Now().String()
 		events = append(
 			events,
 			crawler.Event{
@@ -47,10 +42,10 @@ func (b eventBuilder) buildEvents(res Response, crawlerName, jobName string, cha
 				UID:       id,
 				Name:      id,
 				EventTime: time.Now(), // TODO exact event time
-				Message:   id,
+				Message:   msg,
 			},
 		)
 	}
 
-	return events
+	return events, nil
 }

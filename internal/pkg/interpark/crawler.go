@@ -3,7 +3,7 @@ package interpark
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
@@ -36,7 +36,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 	defer res.Body.Close()
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 		return nil, err
 	}
 
-	return c.eventBuilder.buildEvents(resDTO, c.GetCrawlerName(), c.GetJobName(), c.channel), nil
+	return c.eventBuilder.buildEvents(resDTO, c.date, c.GetCrawlerName(), c.GetJobName(), c.channel)
 }
 
 func NewCrawler(logger *zap.Logger, channel string, date string) *Crawler {

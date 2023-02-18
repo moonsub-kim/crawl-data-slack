@@ -2,7 +2,7 @@ package naverd2
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
@@ -29,7 +29,7 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 	defer res.Body.Close()
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}

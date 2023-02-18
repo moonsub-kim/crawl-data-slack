@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -128,7 +128,7 @@ func getChromeURL(logger *zap.Logger, chromeHost string) (string, error) {
 	defer res.Body.Close()
 
 	// read buffer
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		logger.Error("read", zap.Error(err))
 		return "", err
