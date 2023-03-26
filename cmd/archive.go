@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/google/go-github/v49/github"
@@ -21,7 +22,7 @@ var (
 	slackArchiveArgChannel  = "channel"
 	slackArchiveArgFromDate = "from-date"
 	slackArchiveArgToDate   = "to-date"
-	slackArchiveArgFilter   = "filter"
+	slackArchiveArgFilter   = "filter" // --filter no-link --filter exclude-emoji:emoji_name
 
 	commandArchive *cli.Command = &cli.Command{
 		Name: "archive",
@@ -44,13 +45,19 @@ var (
 			}
 
 			var negativeFilters []slackclient.ArchiveFilter
-			negatives := map[string]slackclient.ArchiveFilter{"no-link": slackclient.NoLinkFilter{}}
-			for _, f := range ctx.StringSlice(slackArchiveArgFilter) {
-				filter, ok := negatives[f]
-				if !ok {
-					return fmt.Errorf("no adequate filter for %s", f)
+			for _, f := range ctx.StringSlice(slackListConversationsArgFilter) {
+				splitted := strings.Split(f, ":")
+
+				if splitted[0] == "no-link" {
+					negativeFilters = append(negativeFilters, slackclient.NoLinkFilter{})
+				} else if splitted[0] == "exclude-emoji" {
+					if len(splitted) != 2 {
+						return fmt.Errorf("exclude-emoji filter requires only one arguement")
+					}
+					negativeFilters = append(negativeFilters, slackclient.NewExcludeEmojiFilter(splitted[1]))
+				} else {
+					return fmt.Errorf("no adequate filter for %s", splitted[0])
 				}
-				negativeFilters = append(negativeFilters, filter)
 			}
 
 			u := crawler.NewUseCase(

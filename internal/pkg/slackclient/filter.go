@@ -2,6 +2,7 @@ package slackclient
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/slack-go/slack"
 )
@@ -82,4 +83,26 @@ func (f NoLinkFilter) Passed(messages []slack.Message) bool {
 	p := regexp.MustCompile("<.+>")
 	return len(messages[0].Attachments) > 0 || // attach (thumbnail형태)로 link 존재
 		len(p.FindString(messages[0].Text)) > 0 // thumbnail이 없는 link
+}
+
+// 특정 이모지가 있으면 제외
+type ExcludeEmojiFilter struct {
+	negativeFilter
+	emojiName string
+}
+
+func (f ExcludeEmojiFilter) Passed(messages []slack.Message) bool {
+	for _, reaction := range messages[0].Reactions {
+		if strings.ToLower(reaction.Name) == f.emojiName {
+			return false
+		}
+	}
+
+	return true
+}
+
+func NewExcludeEmojiFilter(emojiName string) *ExcludeEmojiFilter {
+	return &ExcludeEmojiFilter{
+		emojiName: emojiName,
+	}
 }

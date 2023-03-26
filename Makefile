@@ -33,7 +33,7 @@ init: ## init creates .env file to inject environment variables
 # make up cmd="crawl --channel CHANNEL career wanted --query '비주얼 디자'"
 # make up cmd="crawl --channel CHANNEL career designer-job --query '그래픽 디자이너' --excepts '인턴'"
 # make up cmd="crawl --channel CHANNEL career naver-career --query '데이터 사이언티스트'"
-# make up cmd="slack archive --channel channel-name"
+# make up cmd="github archive --channel channel-name --filter exclude-emoji:x"
 # make up cmd="maintenance migrate-db"
 
 # make up cmd="crawl --channel CHANNEL finance ipo"
