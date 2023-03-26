@@ -10,7 +10,7 @@ import (
 type eventBuilder struct {
 }
 
-const DATE_PARSE_FORMAT string = "02/01/2006"
+const DATE_PARSE_FORMAT string = "02.01.06"
 
 func (b eventBuilder) buildEvents(dtos []DTO, crawlerName, jobName string, channel string) ([]crawler.Event, error) {
 	var events []crawler.Event

@@ -1,9 +1,10 @@
 package deliveryhero
 
 import (
+	"net/http"
 	"strings"
 
-	"github.com/anaskhan96/soup"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/moonsub-kim/crawl-data-slack/internal/pkg/crawler"
 	"go.uber.org/zap"
 )
@@ -22,34 +23,34 @@ func (c Crawler) GetCrawlerName() string { return "delivery-hero" }
 func (c Crawler) GetJobName() string     { return "post" }
 
 func (c Crawler) Crawl() ([]crawler.Event, error) {
-	res, err := soup.Get(URL)
+	res, err := http.Get(URL)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	doc := soup.HTMLParse(res)
-	as := doc.Find("div", "class", "container").FindAll("a")
 	var dtos []DTO
-	for _, a := range as {
-		url := BASE_URL + a.Attrs()["href"]
-		name := a.Find("h4").Text()
+	doc.Find("div.container > article.blog-article > a").Each(
+		func(_ int, s *goquery.Selection) {
+			href, _ := s.Attr("href")
+			url := BASE_URL + href
+			name := s.Find("h5").Text()
+			date := s.Find("span.mr-1").Text()
 
-		res, err := soup.Get(url)
-		if err != nil {
-			return nil, err
-		}
-
-		doc := soup.HTMLParse(res)
-		date := doc.Find("span", "class", "my-3").Text()
-
-		dtos = append(dtos, DTO{
-			ID:   strings.TrimSpace(name),
-			Name: strings.TrimSpace(name),
-			URL:  strings.TrimSpace(url),
-			Date: date,
-		})
-	}
-
+			dtos = append(dtos, DTO{
+				ID:   strings.TrimSpace(name),
+				Name: strings.TrimSpace(name),
+				URL:  strings.TrimSpace(url),
+				Date: date,
+			})
+		},
+	)
+	c.logger.Info("dto", zap.Any("dtos", dtos))
 	return c.eventBuilder.buildEvents(dtos, c.GetCrawlerName(), c.GetJobName(), c.channel)
 }
 
