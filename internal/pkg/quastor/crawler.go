@@ -27,8 +27,8 @@ func (c Crawler) Crawl() ([]crawler.Event, error) {
 	}
 
 	doc := soup.HTMLParse(res)
-	as := doc.Find("main", "class", "w-screen").
-		// Find("div", "class", "max-w-none").
+	as := doc.Find("main", "class", "w-full").
+		Find("div", "class", "divide-y").
 		// FindAll("div", "class", "px-4")[1].
 		FindAll("a")
 
