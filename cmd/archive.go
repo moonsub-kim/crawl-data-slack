@@ -19,6 +19,51 @@ import (
 )
 
 var (
+	commandSyncLabel *cli.Command = &cli.Command{
+		Name: "sync-label",
+		Action: func(ctx *cli.Context) error {
+			slackBotToken := os.Getenv(envSlackBotToken)
+			githubToken := os.Getenv(envGithubToken)
+
+			logger := zapLogger(ctx)
+
+			db, err := openDB(logger)
+			if err != nil {
+				logger.Info("openDB", zap.Error(err))
+				return err
+			}
+
+			u := crawler.NewUseCase(
+				logger,
+				repository.NewRepository(logger, db),
+				nil,
+				slackclient.NewClient(
+					logger,
+					slack.New(slackBotToken),
+					slackBotToken,
+					nil,
+				),
+				githubclient.NewClient(
+					logger,
+					github.NewClient(
+						oauth2.NewClient(
+							context.Background(),
+							oauth2.StaticTokenSource(
+								&oauth2.Token{AccessToken: githubToken},
+							),
+						),
+					),
+					ctx.String("owner"),
+					ctx.String("repo"),
+				),
+			)
+
+			return u.SyncLabel()
+		},
+	}
+)
+
+var (
 	slackArchiveArgChannel  = "channel"
 	slackArchiveArgFromDate = "from-date"
 	slackArchiveArgToDate   = "to-date"

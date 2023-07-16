@@ -159,6 +159,15 @@ func (u UseCase) Archive(channel string, dateFrom time.Time, dateTo time.Time) e
 	return u.archive.CreatePosts(posts)
 }
 
+func (u UseCase) SyncLabel() error {
+	labels, err := u.messenger.GetLabels()
+	if err != nil {
+		return err
+	}
+
+	return u.archive.SyncLabels(labels)
+}
+
 func NewUseCase(
 	logger *zap.Logger,
 	repository Repository,

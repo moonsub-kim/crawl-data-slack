@@ -25,6 +25,7 @@ type Client struct {
 
 var imageExt = map[string]struct{}{"jpg": {}, "jpeg": {}, "png": {}}
 var maxIteration int = 100
+var CATEGORY_EMOJI_PREFIX string = "c-"
 
 func (c Client) getConversations(channelID string, from time.Time, to time.Time) ([]slack.Message, error) {
 	withRetry := func(params *slack.GetConversationHistoryParameters) (res *slack.GetConversationHistoryResponse, err error) {
@@ -133,9 +134,11 @@ func (c Client) buildPost(channel crawler.Channel, messages []slack.Message) (cr
 		return crawler.Post{}, err
 	}
 
+	labels := c.messageToLabel(messages[0])
+
 	post := crawler.Post{
 		Title:  title,
-		Labels: []string{channel.Name}, // TODO label 추가
+		Labels: append(labels, channel.Name),
 		Bodies: []crawler.Body{body},
 	}
 	if len(messages) == 1 {
@@ -154,6 +157,16 @@ func (c Client) buildPost(channel crawler.Channel, messages []slack.Message) (cr
 	}
 
 	return post, nil
+}
+
+func (c Client) messageToLabel(m slack.Message) []string {
+	var ret []string
+	for _, r := range m.Reactions {
+		if strings.HasPrefix(r.Name, CATEGORY_EMOJI_PREFIX) {
+			ret = append(ret, strings.ReplaceAll(r.Name, CATEGORY_EMOJI_PREFIX, ""))
+		}
+	}
+	return ret
 }
 
 func (c Client) ArchivePosts(channel crawler.Channel, from time.Time, to time.Time) ([]crawler.Post, error) {
@@ -258,6 +271,25 @@ func (c Client) Notify(n crawler.Notification) error {
 	}
 
 	return nil
+}
+
+func (c Client) GetLabels() ([]string, error) {
+	emoji, err := c.api.GetEmoji()
+	if err != nil {
+		c.logger.Error("getEmoji", zap.Error(err))
+		return nil, err
+	}
+	c.logger.Info("emojis", zap.Any("emojis", emoji))
+
+	var labels []string
+	for name := range emoji {
+		if strings.HasPrefix(name, CATEGORY_EMOJI_PREFIX) {
+			labels = append(labels, strings.ReplaceAll(name, CATEGORY_EMOJI_PREFIX, ""))
+		}
+	}
+
+	c.logger.Info("labels", zap.Any("labels", labels))
+	return labels, nil
 }
 
 func (c Client) GetChannels() ([]crawler.Channel, error) {

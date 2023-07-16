@@ -106,6 +106,7 @@ var (
 			Subcommands: []*cli.Command{
 				commandGithubCreateIssue,
 				commandArchive,
+				commandSyncLabel,
 			},
 		},
 	}

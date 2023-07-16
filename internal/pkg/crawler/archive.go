@@ -5,4 +5,5 @@ type Archive interface {
 	CreatePosts(post []Post) error
 	CreateLabel(name string) error
 	ListLabels() (map[string]struct{}, error)
+	SyncLabels(labels []string) error
 }

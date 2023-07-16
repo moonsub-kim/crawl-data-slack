@@ -3,6 +3,7 @@ package githubclient
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"time"
 
@@ -223,13 +224,17 @@ func (c Client) CreateLabel(name string) error {
 				c.repo,
 				req,
 			)
-			c.logger.Debug("CreateLabel", zap.Error(err))
+			c.logger.Warn("CreateLabel", zap.Error(err))
 			return err
 		})
 		return label, res, err
 	}
 
-	_, _, err := withRetry(&github.Label{Name: &name})
+	color := fmt.Sprintf("%x", rand.Int63n(0xFFFFFF)) // random color
+	_, _, err := withRetry(&github.Label{
+		Name:  &name,
+		Color: &color,
+	})
 	return err
 }
 
@@ -242,7 +247,7 @@ func (c Client) ListLabels() (map[string]struct{}, error) {
 				c.repo,
 				&github.ListOptions{PerPage: 100},
 			)
-			c.logger.Debug("ListLabels", zap.Error(err))
+			c.logger.Warn("ListLabels", zap.Error(err))
 			return err
 		})
 		return labels, res, err
@@ -259,6 +264,25 @@ func (c Client) ListLabels() (map[string]struct{}, error) {
 	}
 
 	return names, nil
+}
+
+func (c Client) SyncLabels(labels []string) error {
+	currentLabels, err := c.ListLabels()
+	if err != nil {
+		return err
+	}
+
+	for _, l := range labels {
+		if _, ok := currentLabels[l]; !ok {
+			c.logger.Info("new_label", zap.String("new_label", l))
+			err := c.CreateLabel(l)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func NewClient(logger *zap.Logger, client *github.Client, owner string, repo string) *Client {
