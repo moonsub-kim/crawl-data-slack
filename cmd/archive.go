@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -51,8 +50,6 @@ var (
 				return err
 			}
 
-			t := &transport{Base: http.DefaultTransport}
-
 			u := crawler.NewUseCase(
 				logger,
 				repository.NewRepository(logger, db),
@@ -68,7 +65,7 @@ var (
 					github.NewClient(
 						&http.Client{
 							Transport: &oauth2.Transport{
-								Base: t,
+								Base: &transport{Base: http.DefaultTransport},
 								Source: oauth2.StaticTokenSource(
 									&oauth2.Token{
 										TokenType:   "token",
@@ -143,15 +140,17 @@ var (
 				githubclient.NewClient(
 					logger,
 					github.NewClient(
-						oauth2.NewClient(
-							context.Background(),
-							oauth2.StaticTokenSource(
-								&oauth2.Token{
-									AccessToken: githubToken,
-									TokenType:   "token",
-								},
-							),
-						),
+						&http.Client{
+							Transport: &oauth2.Transport{
+								Base: &transport{Base: http.DefaultTransport},
+								Source: oauth2.StaticTokenSource(
+									&oauth2.Token{
+										TokenType:   "token",
+										AccessToken: githubToken,
+									},
+								), // ref: oauth2.NewClient
+							},
+						},
 					),
 					ctx.String("owner"),
 					ctx.String("repo"),
