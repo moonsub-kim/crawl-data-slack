@@ -252,7 +252,10 @@ func RunGithub(f runGithubCommandFunc) func(ctx *cli.Context) error {
 				oauth2.NewClient(
 					context.Background(),
 					oauth2.StaticTokenSource(
-						&oauth2.Token{AccessToken: githubToken},
+						&oauth2.Token{
+							TokenType:   "token",
+							AccessToken: githubToken,
+						},
 					),
 				),
 			),
