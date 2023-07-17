@@ -230,6 +230,7 @@ func (c Client) CreateLabel(name string) error {
 		return label, res, err
 	}
 
+	rand.Seed(time.Now().Unix())
 	color := fmt.Sprintf("%x", rand.Int63n(0xFFFFFF)) // random color
 	_, _, err := withRetry(&github.Label{
 		Name:  &name,
