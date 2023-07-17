@@ -18,7 +18,6 @@ import (
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/internal"
 )
 
 type transport struct {
@@ -26,8 +25,15 @@ type transport struct {
 }
 
 func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	log.Print("header", req.Header.Get("Authorization"))
-	return t.Base.RoundTrip(req)
+	res, err := t.Base.RoundTrip(req)
+	if err == nil {
+		log.Printf(
+			"API rate remaining %s/%s",
+			res.Header.Get("X-Ratelimit-Remaining"),
+			res.Header.Get("X-Ratelimit-Limit"),
+		)
+	}
+	return res, err
 }
 
 var (
@@ -45,13 +51,7 @@ var (
 				return err
 			}
 
-			c := context.WithValue(
-				context.Background(),
-				internal.HTTPClient,
-				transport{
-					Base: http.DefaultClient.Transport,
-				},
-			)
+			t := &transport{Base: http.DefaultTransport}
 
 			u := crawler.NewUseCase(
 				logger,
@@ -66,15 +66,16 @@ var (
 				githubclient.NewClient(
 					logger,
 					github.NewClient(
-						oauth2.NewClient(
-							c,
-							oauth2.StaticTokenSource(
-								&oauth2.Token{
-									TokenType:   "token",
-									AccessToken: githubToken,
-								},
-							),
-						),
+						&http.Client{
+							Transport: &oauth2.Transport{
+								Base: t,
+								Source: oauth2.StaticTokenSource(
+									&oauth2.Token{
+										TokenType:   "token",
+										AccessToken: githubToken,
+									},
+							},
+						},
 					),
 					ctx.String("owner"),
 					ctx.String("repo"),
