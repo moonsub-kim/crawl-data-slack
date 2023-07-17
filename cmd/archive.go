@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -16,7 +18,17 @@ import (
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/internal"
 )
+
+type transport struct {
+	Base http.RoundTripper
+}
+
+func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	log.Print("header", req.Header.Get("Authorization"))
+	return t.Base.RoundTrip(req)
+}
 
 var (
 	commandSyncLabel *cli.Command = &cli.Command{
@@ -33,6 +45,14 @@ var (
 				return err
 			}
 
+			c := context.WithValue(
+				context.Background(),
+				internal.HTTPClient,
+				transport{
+					Base: http.DefaultClient.Transport,
+				},
+			)
+
 			u := crawler.NewUseCase(
 				logger,
 				repository.NewRepository(logger, db),
@@ -47,7 +67,7 @@ var (
 					logger,
 					github.NewClient(
 						oauth2.NewClient(
-							context.Background(),
+							c,
 							oauth2.StaticTokenSource(
 								&oauth2.Token{
 									TokenType:   "token",

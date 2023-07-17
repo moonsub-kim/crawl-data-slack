@@ -35,6 +35,7 @@ init: ## init creates .env file to inject environment variables
 # make up cmd="crawl --channel CHANNEL career naver-career --query '데이터 사이언티스트'"
 # make up cmd="github archive --channel channel-name --filter exclude-emoji:x"
 # make up cmd="maintenance migrate-db"
+# make up cmd="github sync-label"
 
 # make up cmd="crawl --channel CHANNEL finance ipo"
 # make up cmd="crawl --channel CHANNEL confluent --job release"
