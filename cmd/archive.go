@@ -74,6 +74,7 @@ var (
 										TokenType:   "token",
 										AccessToken: githubToken,
 									},
+								), // ref: oauth2.NewClient
 							},
 						},
 					),
