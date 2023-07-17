@@ -13,5 +13,6 @@ func main() {
 		Commands: Commands,
 	}
 	retry.DefaultDelay = time.Second * 5
+	retry.DefaultAttempts = 20
 	app.Run(os.Args)
 }
