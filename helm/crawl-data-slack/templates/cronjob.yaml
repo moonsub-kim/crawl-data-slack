@@ -60,4 +60,6 @@ spec:
             resources:
 {{ toYaml $.Values.chromedp.resources | indent 14 }}
           {{ end }}
+          affinity:
+{{ toYaml $.Values.affinity | indent 12 }}
 {{- end }}
