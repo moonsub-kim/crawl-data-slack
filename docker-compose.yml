@@ -21,7 +21,9 @@ services:
       - EOMISAE_PW=${EOMISAE_PW}
       - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
       - MYSQL_CONN=${MYSQL_CONN:-root@tcp(db:3306)/crawler?parseTime=true&charset=utf8}
-      - POSTGRES_CONN=${POSTGRES_CONN:-host=postgres user=crawler password=crawler dbname=crawler port=5432 sslmode=disable}
+      # - POSTGRES_CONN=${POSTGRES_CONN:-host=postgres user=crawler password=crawler dbname=crawler port=5432 sslmode=disable}
+      # - NEW_POSTGRES_CONN=${POSTGRES_CONN:-host=db.qdiqekotxrhagcoetjfr.supabase.co user=postgres password=6ZZcAgCVx91vaZ2W dbname=postgres port=5432 sslmode=disable}
+      - POSTGRES_CONN=${POSTGRES_CONN:-host=db.qdiqekotxrhagcoetjfr.supabase.co user=postgres password=6ZZcAgCVx91vaZ2W dbname=postgres port=5432 sslmode=disable}
       - CHROME_HOST=chrome:9222
       # - CHROME_LOG_LEVEL=DEBUG
     depends_on:
