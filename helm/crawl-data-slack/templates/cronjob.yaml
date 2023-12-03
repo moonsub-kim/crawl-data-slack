@@ -43,7 +43,7 @@ spec:
             {{ end }}
             {{- range $key, $val := .env }}
             - name: {{ $key }}
-              value: {{ $val }}
+              value: "{{ $val }}"
             {{- end }}
           {{ if .chromeEnabled }}
           - name: sidecar-chrome
