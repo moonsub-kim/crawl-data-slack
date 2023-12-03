@@ -59,22 +59,11 @@ run: ## Run the cmd
 	@docker-compose build app
 	@docker-compose run --name crawl-data-slack-run --rm app $(cmd)
 
-docker-upload-m1-arm: ## In apple silicon mac, upload the image to the docker registry `make docker-upload-m1 version=0.x.y`
-	@docker buildx build --platform linux/arm64 --push -t gos16052/crawl-data-slack:$(version) .
-
-docker-upload-m1: ## In apple silicon mac, upload the image to the docker registry `make docker-upload-m1 version=0.x.y`
-	@docker buildx build --platform linux/amd64 --push -t gos16052/crawl-data-slack:$(version) .
+docker-upload-cross: ## In apple silicon mac, upload the image to the docker registry `make docker-upload-m1 version=0.x.y`
+	@docker buildx build --platform=linux/arm64,linux/amd64 --push -t gos16052/crawl-data-slack:$(version) -t gos16052/crawl-data-slack:latest .
 
 docker-upload: ## Upload the image to the docker registry `make docker-upload version=0.x.y`
 	@docker-compose build
 	@docker tag crawl-data-slack_app gos16052/crawl-data-slack:$(version)
+	@docker tag crawl-data-slack_app gos16052/crawl-data-slack:latest
 	@docker push gos16052/crawl-data-slack:$(version)
-
-# eks-rw
-# kubectx dev
-# kubens grslack
-helm-upgrade:
-	@helm upgrade grslack helm/crawl-data-slack -f helm/values/values.yaml
-
-helm-template:
-	@helm template grslack helm/crawl-data-slack -f helm/values/values.yaml
