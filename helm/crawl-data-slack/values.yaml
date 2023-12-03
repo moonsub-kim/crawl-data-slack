@@ -2,6 +2,8 @@ image: gos16052/crawl-data-slack
 
 imageTag: latest
 
+imagePullPoicy: IfNotPresent
+
 namespace: ""
 
 cronJobs:

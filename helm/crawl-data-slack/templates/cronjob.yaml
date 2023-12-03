@@ -30,6 +30,7 @@ spec:
           containers:
           - name: {{ .jobName }}
             image: {{ $.Values.image }}:{{ $.Values.imageTag }}
+            imagePullPolicy: {{ $.Value.imagePullPolicy }}
             command:
             - "sh"
             - "-c"
