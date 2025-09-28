@@ -277,14 +277,23 @@ func RunCrawl(initCrawler initCrawlerFunc) func(ctx *cli.Context) error {
 		after := time.Now().Add(time.Duration(-recentDays) * time.Hour * 24)
 
 		logger := zapLogger(ctx)
+		logger.Info("log")
 
 		c, err := initCrawler(ctx, logger, channel)
 		if err != nil {
+			logger.Error(
+				"Init Crawler Error",
+				zap.Error(err),
+			)
 			return err
 		}
 
 		db, err := openDB(logger)
 		if err != nil {
+			logger.Error(
+				"openDB Error",
+				zap.Error(err),
+			)
 			return err
 		}
 
