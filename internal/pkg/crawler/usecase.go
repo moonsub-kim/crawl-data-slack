@@ -41,10 +41,11 @@ func (u UseCase) Work(after time.Time) error {
 func (u UseCase) filterEvents(crawledEvents []Event, after time.Time) ([]Event, error) {
 	var events []Event
 	for _, e := range crawledEvents {
-		if e.EventTime == EMPTY_TIME {
+		if e.EventTime.Equal(EMPTY_TIME) {
 			return nil, errors.New("empty EventTime")
 		}
 
+		u.logger.Info("event", zap.Any("t", e.EventTime), zap.Any("after", after))
 		if !e.EventTime.After(after) {
 			continue
 		}

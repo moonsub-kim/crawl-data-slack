@@ -40,7 +40,7 @@ func (r Repository) SaveEvent(event crawler.Event) error {
 func (r Repository) GetChannel(userName string) (crawler.Channel, error) {
 	var user Channel
 	err := r.db.First(&user, "name = ?", userName).Error
-	if errors.As(err, &gorm.ErrRecordNotFound) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return crawler.Channel{}, nil
 	} else if err != nil {
 		return crawler.Channel{}, err
